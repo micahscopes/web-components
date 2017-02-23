@@ -32,9 +32,9 @@ node_modules
 .idea
 
 # Bundle
-dist/
+# dist/
 
 
 # CUSTOM
 # ------
-src/native-shim.js
+# src/native-shim.js

@@ -38,6 +38,10 @@
   version "1.0.0-alpha.3"
   resolved "https://github.com/webcomponents/custom-elements/archive/36451e1.tar.gz#cd5c86c032a375a5416e00a13e84455c2d716df0"
 
+"@webcomponents/custom-elements@webcomponents/custom-elements":
+  version "1.0.0-alpha.4"
+  resolved "https://codeload.github.com/webcomponents/custom-elements/tar.gz/1b2ad174411aab7cccb8231214399bb033dd5d49"
+
 "@webcomponents/shadycss@https://github.com/webcomponents/shadycss/archive/bea402d.tar.gz":
   version "0.0.1"
   resolved "https://github.com/webcomponents/shadycss/archive/bea402d.tar.gz#421871c681610899ba10a433e4c920c9a31f4666"

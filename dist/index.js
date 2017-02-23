@@ -98,8 +98,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	// ShadyDOM comes first. Both because it may need to be forced and the
 	// ShadyCSS polyfill requires it to function.
-	__webpack_require__(37);
-	__webpack_require__(53);
+	__webpack_require__(51);
+	__webpack_require__(67);
 
 /***/ },
 /* 1 */
@@ -2871,7 +2871,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 	
-	window.customElements && eval("/**\n * @license\n * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.\n * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt\n * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt\n * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt\n * Code distributed by Google as part of the polymer project is also\n * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt\n */\n\n/**\n * This shim allows elements written in, or compiled to, ES5 to work on native\n * implementations of Custom Elements.\n *\n * ES5-style classes don't work with native Custom Elements because the\n * HTMLElement constructor uses the value of `new.target` to look up the custom\n * element definition for the currently called constructor. `new.target` is only\n * set when `new` is called and is only propagated via super() calls. super()\n * is not emulatable in ES5. The pattern of `SuperClass.call(this)`` only works\n * when extending other ES5-style classes, and does not propagate `new.target`.\n *\n * This shim allows the native HTMLElement constructor to work by generating and\n * registering a stand-in class instead of the users custom element class. This\n * stand-in class's constructor has an actual call to super().\n * `customElements.define()` and `customElements.get()` are both overridden to\n * hide this stand-in class from users.\n *\n * In order to create instance of the user-defined class, rather than the stand\n * in, the stand-in's constructor swizzles its instances prototype and invokes\n * the user-defined constructor. When the user-defined constructor is called\n * directly it creates an instance of the stand-in class to get a real extension\n * of HTMLElement and returns that.\n *\n * There are two important constructors: A patched HTMLElement constructor, and\n * the StandInElement constructor. They both will be called to create an element\n * but which is called first depends on whether the browser creates the element\n * or the user-defined constructor is called directly. The variables\n * `browserConstruction` and `userConstruction` control the flow between the\n * two constructors.\n *\n * This shim should be better than forcing the polyfill because:\n *   1. It's smaller\n *   2. All reaction timings are the same as native (mostly synchronous)\n *   3. All reaction triggering DOM operations are automatically supported\n *\n * There are some restrictions and requirements on ES5 constructors:\n *   1. All constructors in a inheritance hierarchy must be ES5-style, so that\n *      they can be called with Function.call(). This effectively means that the\n *      whole application must be compiled to ES5.\n *   2. Constructors must return the value of the emulated super() call. Like\n *      `return SuperClass.call(this)`\n *   3. The `this` reference should not be used before the emulated super() call\n *      just like `this` is illegal to use before super() in ES6.\n *   4. Constructors should not create other custom elements before the emulated\n *      super() call. This is the same restriction as with native custom\n *      elements.\n *\n *  Compiling valid class-based custom elements to ES5 will satisfy these\n *  requirements with the latest version of popular transpilers.\n */\n(() => {\n  'use strict';\n\n  const NativeHTMLElement = window.HTMLElement;\n  const nativeDefine = window.customElements.define;\n  const nativeGet = window.customElements.get;\n\n  /**\n   * Map of user-provided constructors to tag names.\n   *\n   * @type {Map<Function, string>}\n   */\n  const tagnameByConstructor = new Map();\n\n  /**\n   * Map of tag names to user-provided constructors.\n   *\n   * @type {Map<string, Function>}\n   */\n  const constructorByTagname = new Map();\n\n\n  /**\n   * Whether the constructors are being called by a browser process, ie parsing\n   * or createElement.\n   */\n  let browserConstruction = false;\n\n  /**\n   * Whether the constructors are being called by a user-space process, ie\n   * calling an element constructor.\n   */\n  let userConstruction = false;\n\n  window.HTMLElement = function() {\n    if (!browserConstruction) {\n      const tagname = tagnameByConstructor.get(this.constructor);\n      const fakeClass = nativeGet.call(window.customElements, tagname);\n\n      // Make sure that the fake constructor doesn't call back to this constructor\n      userConstruction = true;\n      const instance = new (fakeClass)();\n      return instance;\n    }\n    // Else do nothing. This will be reached by ES5-style classes doing\n    // HTMLElement.call() during initialization\n    browserConstruction = false;\n  };\n  // By setting the patched HTMLElement's prototype property to the native\n  // HTMLElement's prototype we make sure that:\n  //     document.createElement('a') instanceof HTMLElement\n  // works because instanceof uses HTMLElement.prototype, which is on the\n  // ptototype chain of built-in elements.\n  window.HTMLElement.prototype = NativeHTMLElement.prototype;\n\n  window.customElements.define = (tagname, elementClass) => {\n    const elementProto = elementClass.prototype;\n    const StandInElement = class extends NativeHTMLElement {\n      constructor() {\n        // Call the native HTMLElement constructor, this gives us the\n        // under-construction instance as `this`:\n        super();\n\n        // The prototype will be wrong up because the browser used our fake\n        // class, so fix it:\n        Object.setPrototypeOf(this, elementProto);\n\n        if (!userConstruction) {\n          // Make sure that user-defined constructor bottom's out to a do-nothing\n          // HTMLElement() call\n          browserConstruction = true;\n          // Call the user-defined constructor on our instance:\n          elementClass.call(this);\n        }\n        userConstruction = false;\n      }\n    };\n    const standInProto = StandInElement.prototype;\n    StandInElement.observedAttributes = elementClass.observedAttributes;\n    standInProto.connectedCallback = elementProto.connectedCallback;\n    standInProto.disconnectedCallback = elementProto.disconnectedCallback;\n    standInProto.attributeChangedCallback = elementProto.attributeChangedCallback;\n    standInProto.adoptedCallback = elementProto.adoptedCallback;\n\n    tagnameByConstructor.set(elementClass, tagname);\n    constructorByTagname.set(tagname, elementClass);\n    nativeDefine.call(window.customElements, tagname, StandInElement);\n  };\n\n  window.customElements.get = (tagname) => constructorByTagname.get(tagname);\n\n})();");
+	window.customElements && eval("/**\n * @license\n * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.\n * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt\n * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt\n * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt\n * Code distributed by Google as part of the polymer project is also\n * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt\n */\n\n/**\n * This shim allows elements written in, or compiled to, ES5 to work on native\n * implementations of Custom Elements.\n *\n * ES5-style classes don't work with native Custom Elements because the\n * HTMLElement constructor uses the value of `new.target` to look up the custom\n * element definition for the currently called constructor. `new.target` is only\n * set when `new` is called and is only propagated via super() calls. super()\n * is not emulatable in ES5. The pattern of `SuperClass.call(this)`` only works\n * when extending other ES5-style classes, and does not propagate `new.target`.\n *\n * This shim allows the native HTMLElement constructor to work by generating and\n * registering a stand-in class instead of the users custom element class. This\n * stand-in class's constructor has an actual call to super().\n * `customElements.define()` and `customElements.get()` are both overridden to\n * hide this stand-in class from users.\n *\n * In order to create instance of the user-defined class, rather than the stand\n * in, the stand-in's constructor swizzles its instances prototype and invokes\n * the user-defined constructor. When the user-defined constructor is called\n * directly it creates an instance of the stand-in class to get a real extension\n * of HTMLElement and returns that.\n *\n * There are two important constructors: A patched HTMLElement constructor, and\n * the StandInElement constructor. They both will be called to create an element\n * but which is called first depends on whether the browser creates the element\n * or the user-defined constructor is called directly. The variables\n * `browserConstruction` and `userConstruction` control the flow between the\n * two constructors.\n *\n * This shim should be better than forcing the polyfill because:\n *   1. It's smaller\n *   2. All reaction timings are the same as native (mostly synchronous)\n *   3. All reaction triggering DOM operations are automatically supported\n *\n * There are some restrictions and requirements on ES5 constructors:\n *   1. All constructors in a inheritance hierarchy must be ES5-style, so that\n *      they can be called with Function.call(). This effectively means that the\n *      whole application must be compiled to ES5.\n *   2. Constructors must return the value of the emulated super() call. Like\n *      `return SuperClass.call(this)`\n *   3. The `this` reference should not be used before the emulated super() call\n *      just like `this` is illegal to use before super() in ES6.\n *   4. Constructors should not create other custom elements before the emulated\n *      super() call. This is the same restriction as with native custom\n *      elements.\n *\n *  Compiling valid class-based custom elements to ES5 will satisfy these\n *  requirements with the latest version of popular transpilers.\n */\n(() => {\n  'use strict';\n\n  // Do nothing if `customElements` does not exist.\n  if (!window.customElements) return;\n\n  const NativeHTMLElement = window.HTMLElement;\n  const nativeDefine = window.customElements.define;\n  const nativeGet = window.customElements.get;\n\n  /**\n   * Map of user-provided constructors to tag names.\n   *\n   * @type {Map<Function, string>}\n   */\n  const tagnameByConstructor = new Map();\n\n  /**\n   * Map of tag names to user-provided constructors.\n   *\n   * @type {Map<string, Function>}\n   */\n  const constructorByTagname = new Map();\n\n\n  /**\n   * Whether the constructors are being called by a browser process, ie parsing\n   * or createElement.\n   */\n  let browserConstruction = false;\n\n  /**\n   * Whether the constructors are being called by a user-space process, ie\n   * calling an element constructor.\n   */\n  let userConstruction = false;\n\n  window.HTMLElement = function() {\n    if (!browserConstruction) {\n      const tagname = tagnameByConstructor.get(this.constructor);\n      const fakeClass = nativeGet.call(window.customElements, tagname);\n\n      // Make sure that the fake constructor doesn't call back to this constructor\n      userConstruction = true;\n      const instance = new (fakeClass)();\n      return instance;\n    }\n    // Else do nothing. This will be reached by ES5-style classes doing\n    // HTMLElement.call() during initialization\n    browserConstruction = false;\n  };\n  // By setting the patched HTMLElement's prototype property to the native\n  // HTMLElement's prototype we make sure that:\n  //     document.createElement('a') instanceof HTMLElement\n  // works because instanceof uses HTMLElement.prototype, which is on the\n  // ptototype chain of built-in elements.\n  window.HTMLElement.prototype = NativeHTMLElement.prototype;\n\n  window.customElements.define = (tagname, elementClass) => {\n    const elementProto = elementClass.prototype;\n    const StandInElement = class extends NativeHTMLElement {\n      constructor() {\n        // Call the native HTMLElement constructor, this gives us the\n        // under-construction instance as `this`:\n        super();\n\n        // The prototype will be wrong up because the browser used our fake\n        // class, so fix it:\n        Object.setPrototypeOf(this, elementProto);\n\n        if (!userConstruction) {\n          // Make sure that user-defined constructor bottom's out to a do-nothing\n          // HTMLElement() call\n          browserConstruction = true;\n          // Call the user-defined constructor on our instance:\n          elementClass.call(this);\n        }\n        userConstruction = false;\n      }\n    };\n    const standInProto = StandInElement.prototype;\n    StandInElement.observedAttributes = elementClass.observedAttributes;\n    standInProto.connectedCallback = elementProto.connectedCallback;\n    standInProto.disconnectedCallback = elementProto.disconnectedCallback;\n    standInProto.attributeChangedCallback = elementProto.attributeChangedCallback;\n    standInProto.adoptedCallback = elementProto.adoptedCallback;\n\n    tagnameByConstructor.set(elementClass, tagname);\n    constructorByTagname.set(tagname, elementClass);\n    nativeDefine.call(window.customElements, tagname, StandInElement);\n  };\n\n  window.customElements.get = (tagname) => constructorByTagname.get(tagname);\n\n})();");
 
 /***/ },
 /* 35 */
@@ -3177,15 +3177,35 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 36 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+	var _CustomElementInternals = __webpack_require__(37);
 	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	var _CustomElementRegistry = __webpack_require__(40);
+	
+	var _CustomElementRegistry2 = _interopRequireDefault(_CustomElementRegistry);
+	
+	var _HTMLElement = __webpack_require__(43);
+	
+	var _HTMLElement2 = _interopRequireDefault(_HTMLElement);
+	
+	var _Document = __webpack_require__(46);
+	
+	var _Document2 = _interopRequireDefault(_Document);
+	
+	var _Node = __webpack_require__(48);
+	
+	var _Node2 = _interopRequireDefault(_Node);
+	
+	var _Element = __webpack_require__(49);
+	
+	var _Element2 = _interopRequireDefault(_Element);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	/**
 	 * @license
@@ -3197,847 +3217,2062 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 	 */
 	
-	/**
-	 * 2.3
-	 * http://w3c.github.io/webcomponents/spec/custom/#dfn-element-definition
-	 * @typedef {{
-	 *  name: string,
-	 *  localName: string,
-	 *  constructor: function(new:HTMLElement),
-	 *  connectedCallback: (Function|undefined),
-	 *  disconnectedCallback: (Function|undefined),
-	 *  attributeChangedCallback: (Function|undefined),
-	 *  observedAttributes: Array<string>,
-	 * }}
-	 */
-	var CustomElementDefinition = void 0;
+	var priorCustomElements = window['customElements'];
 	
-	/**
-	 * @typedef {{
-	 *  resolve: !function(undefined),
-	 *  promise: !Promise<undefined>,
-	 * }}
-	 */
-	var Deferred = void 0;
+	if (!priorCustomElements || priorCustomElements['forcePolyfill'] || typeof priorCustomElements['define'] != 'function' || typeof priorCustomElements['get'] != 'function') {
+	  /** @type {!CustomElementInternals} */
+	  var internals = new _CustomElementInternals2.default();
 	
-	(function () {
-	  'use strict';
+	  (0, _HTMLElement2.default)(internals);
+	  (0, _Document2.default)(internals);
+	  (0, _Node2.default)(internals);
+	  (0, _Element2.default)(internals);
 	
-	  /**
-	   * Gets 'customElement' from window so that it could be modified after
-	   * the polyfill loads.
-	   * @function
-	   * @return {CustomElementRegistry}
-	   */
+	  // The main document is always associated with the registry.
+	  document.__CE_hasRegistry = true;
 	
-	  var _customElements = function _customElements() {
-	    return window['customElements'];
-	  };
+	  /** @type {!CustomElementRegistry} */
+	  var customElements = new _CustomElementRegistry2.default(internals);
 	
-	  var _observerProp = '__$CE_observer';
-	  var _attachedProp = '__$CE_attached';
-	  var _upgradedProp = '__$CE_upgraded';
+	  Object.defineProperty(window, 'customElements', {
+	    configurable: true,
+	    enumerable: true,
+	    value: customElements
+	  });
+	}
+
+/***/ },
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
 	
-	  if (_customElements()) {
-	    _customElements().flush = function () {};
-	    if (!_customElements().forcePolyfill) {
-	      return;
-	    }
-	  }
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 	
-	  // name validation
-	  // https://html.spec.whatwg.org/multipage/scripting.html#valid-custom-element-name
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	  /**
-	   * @const
-	   * @type {Array<string>}
-	   */
-	  var reservedTagList = ['annotation-xml', 'color-profile', 'font-face', 'font-face-src', 'font-face-uri', 'font-face-format', 'font-face-name', 'missing-glyph'];
+	var _Utilities = __webpack_require__(38);
 	
-	  /**
-	   * @param {!string} name
-	   * @return {!Error|undefined}
-	   */
-	  function checkValidCustomElementName(name) {
-	    if (!(/^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(name) && reservedTagList.indexOf(name) === -1)) {
-	      return new Error('The element name \'' + name + '\' is not valid.');
-	    }
-	  }
+	var Utilities = _interopRequireWildcard(_Utilities);
 	
-	  /**
-	   * @param {!Node} root
-	   * @return {TreeWalker}
-	   */
-	  function createTreeWalker(root) {
-	    // IE 11 requires the third and fourth arguments be present. If the third
-	    // arg is null, it applies the default behaviour. However IE also requires
-	    // the fourth argument be present even though the other browsers ignore it.
-	    return document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+	var _CustomElementState = __webpack_require__(39);
+	
+	var _CustomElementState2 = _interopRequireDefault(_CustomElementState);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var CustomElementInternals = function () {
+	  function CustomElementInternals() {
+	    _classCallCheck(this, CustomElementInternals);
+	
+	    /** @type {!Map<string, !CustomElementDefinition>} */
+	    this._localNameToDefinition = new Map();
+	
+	    /** @type {!Map<!Function, !CustomElementDefinition>} */
+	    this._constructorToDefinition = new Map();
+	
+	    /** @type {!Array<!function(!Node)>} */
+	    this._patches = [];
+	
+	    /** @type {boolean} */
+	    this._hasPatches = false;
 	  }
 	
 	  /**
-	   * @param {!Node} node
-	   * @return {boolean}
-	   */
-	  function isElement(node) {
-	    return node.nodeType === Node.ELEMENT_NODE;
-	  }
-	
-	  /**
-	   * @param {!Element} element
-	   * @return {boolean}
-	   */
-	  function isHtmlImport(element) {
-	    return element.tagName === 'LINK' && element.rel && element.rel.toLowerCase().split(' ').indexOf('import') !== -1;
-	  }
-	
-	  /**
-	   * @param {!Element} element
-	   * @return {boolean}
-	   */
-	  function isConnected(element) {
-	    var n = element;
-	    do {
-	      if (n[_attachedProp] || n.nodeType === Node.DOCUMENT_NODE) return true;
-	      n = n.parentNode || n.nodeType === Node.DOCUMENT_FRAGMENT_NODE && n.host;
-	    } while (n);
-	    return false;
-	  }
-	
-	  /**
-	   * A registry of custom element definitions.
-	   *
-	   * See https://html.spec.whatwg.org/multipage/scripting.html#customelementsregistry
-	   *
-	   * @property {boolean} enableFlush Set to true to enable the flush() method
-	   *   to work. This should only be done for tests, as it causes a memory leak.
+	   * @param {string} localName
+	   * @param {!CustomElementDefinition} definition
 	   */
 	
-	  var CustomElementRegistry = function () {
-	    function CustomElementRegistry() {
-	      _classCallCheck(this, CustomElementRegistry);
 	
-	      /** @private {!Map<string, !CustomElementDefinition>} **/
-	      this._definitions = new Map();
-	
-	      /** @private {!Map<Function, string>} **/
-	      this._constructors = new Map();
-	
-	      /** @private {!Map<string, !Deferred>} **/
-	      this._whenDefinedMap = new Map();
-	
-	      /** @private {!Set<!MutationObserver>} **/
-	      this._observers = new Set();
-	
-	      /** @private {!MutationObserver} **/
-	      this._attributeObserver = new MutationObserver(
-	      /** @type {function(Array<MutationRecord>, MutationObserver)} */
-	      this._handleAttributeChange.bind(this));
-	
-	      /** @private {?HTMLElement} **/
-	      this._newInstance = null;
-	
-	      /** @private {!Set<string>} **/
-	      this._pendingHtmlImportUrls = new Set();
-	
-	      /** @type {boolean} **/
-	      this.enableFlush = true;
-	
-	      /** @private {boolean} **/
-	      this._upgradeScheduled = false;
-	
-	      /** @type {MutationObserver} **/
-	      this._mainDocumentObserver = null;
+	  _createClass(CustomElementInternals, [{
+	    key: 'setDefinition',
+	    value: function setDefinition(localName, definition) {
+	      this._localNameToDefinition.set(localName, definition);
+	      this._constructorToDefinition.set(definition.constructor, definition);
 	    }
 	
-	    // HTML spec part 4.13.4
-	    // https://html.spec.whatwg.org/multipage/scripting.html#dom-customelementsregistry-define
 	    /**
-	     * @param {string} name
-	     * @param {function(new:HTMLElement)} constructor
-	     * @param {{extends: string}} options
-	     * @return {undefined}
+	     * @param {string} localName
+	     * @return {!CustomElementDefinition|undefined}
 	     */
 	
+	  }, {
+	    key: 'localNameToDefinition',
+	    value: function localNameToDefinition(localName) {
+	      return this._localNameToDefinition.get(localName);
+	    }
 	
-	    _createClass(CustomElementRegistry, [{
-	      key: 'define',
-	      value: function define(name, constructor, options) {
-	        // 1:
-	        if (typeof constructor !== 'function') {
-	          throw new TypeError('constructor must be a Constructor');
+	    /**
+	     * @param {!Function} constructor
+	     * @return {!CustomElementDefinition|undefined}
+	     */
+	
+	  }, {
+	    key: 'constructorToDefinition',
+	    value: function constructorToDefinition(constructor) {
+	      return this._constructorToDefinition.get(constructor);
+	    }
+	
+	    /**
+	     * @param {!function(!Node)} listener
+	     */
+	
+	  }, {
+	    key: 'addPatch',
+	    value: function addPatch(listener) {
+	      this._hasPatches = true;
+	      this._patches.push(listener);
+	    }
+	
+	    /**
+	     * @param {!Node} node
+	     */
+	
+	  }, {
+	    key: 'patchTree',
+	    value: function patchTree(node) {
+	      var _this = this;
+	
+	      if (!this._hasPatches) return;
+	
+	      Utilities.walkDeepDescendantElements(node, function (element) {
+	        return _this.patch(element);
+	      });
+	    }
+	
+	    /**
+	     * @param {!Node} node
+	     */
+	
+	  }, {
+	    key: 'patch',
+	    value: function patch(node) {
+	      if (!this._hasPatches) return;
+	
+	      if (node.__CE_patched) return;
+	      node.__CE_patched = true;
+	
+	      for (var i = 0; i < this._patches.length; i++) {
+	        this._patches[i](node);
+	      }
+	    }
+	
+	    /**
+	     * @param {!Node} root
+	     */
+	
+	  }, {
+	    key: 'connectTree',
+	    value: function connectTree(root) {
+	      var elements = [];
+	
+	      Utilities.walkDeepDescendantElements(root, function (element) {
+	        return elements.push(element);
+	      });
+	
+	      for (var i = 0; i < elements.length; i++) {
+	        var element = elements[i];
+	        if (element.__CE_state === _CustomElementState2.default.custom) {
+	          this.connectedCallback(element);
+	        } else {
+	          this.upgradeElement(element);
 	        }
+	      }
+	    }
 	
-	        // 2. If constructor is an interface object whose corresponding interface
-	        //    either is HTMLElement or has HTMLElement in its set of inherited
-	        //    interfaces, throw a TypeError and abort these steps.
-	        //
-	        // It doesn't appear possible to check this condition from script
+	    /**
+	     * @param {!Node} root
+	     */
 	
-	        // 3:
-	        var nameError = checkValidCustomElementName(name);
-	        if (nameError) throw nameError;
+	  }, {
+	    key: 'disconnectTree',
+	    value: function disconnectTree(root) {
+	      var elements = [];
 	
-	        // 4, 5:
-	        // Note: we don't track being-defined names and constructors because
-	        // define() isn't normally reentrant. The only time user code can run
-	        // during define() is when getting callbacks off the prototype, which
-	        // would be highly-unusual. We can make define() reentrant-safe if needed.
-	        if (this._definitions.has(name)) {
-	          throw new Error('An element with name \'' + name + '\' is already defined');
+	      Utilities.walkDeepDescendantElements(root, function (element) {
+	        return elements.push(element);
+	      });
+	
+	      for (var i = 0; i < elements.length; i++) {
+	        var element = elements[i];
+	        if (element.__CE_state === _CustomElementState2.default.custom) {
+	          this.disconnectedCallback(element);
 	        }
+	      }
+	    }
 	
-	        // 6, 7:
-	        if (this._constructors.has(constructor)) {
-	          throw new Error('Definition failed for \'' + name + '\': ' + 'The constructor is already used.');
-	        }
+	    /**
+	     * Upgrades all uncustomized custom elements at and below a root node for
+	     * which there is a definition. When custom element reaction callbacks are
+	     * assumed to be called synchronously (which, by the current DOM / HTML spec
+	     * definitions, they are *not*), callbacks for both elements customized
+	     * synchronously by the parser and elements being upgraded occur in the same
+	     * relative order.
+	     *
+	     * NOTE: This function, when used to simulate the construction of a tree that
+	     * is already created but not customized (i.e. by the parser), does *not*
+	     * prevent the element from reading the 'final' (true) state of the tree. For
+	     * example, the element, during truly synchronous parsing / construction would
+	     * see that it contains no children as they have not yet been inserted.
+	     * However, this function does not modify the tree, the element will
+	     * (incorrectly) have children. Additionally, self-modification restrictions
+	     * for custom element constructors imposed by the DOM spec are *not* enforced.
+	     *
+	     *
+	     * The following nested list shows the steps extending down from the HTML
+	     * spec's parsing section that cause elements to be synchronously created and
+	     * upgraded:
+	     *
+	     * The "in body" insertion mode:
+	     * https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+	     * - Switch on token:
+	     *   .. other cases ..
+	     *   -> Any other start tag
+	     *      - [Insert an HTML element](below) for the token.
+	     *
+	     * Insert an HTML element:
+	     * https://html.spec.whatwg.org/multipage/syntax.html#insert-an-html-element
+	     * - Insert a foreign element for the token in the HTML namespace:
+	     *   https://html.spec.whatwg.org/multipage/syntax.html#insert-a-foreign-element
+	     *   - Create an element for a token:
+	     *     https://html.spec.whatwg.org/multipage/syntax.html#create-an-element-for-the-token
+	     *     - Will execute script flag is true?
+	     *       - (Element queue pushed to the custom element reactions stack.)
+	     *     - Create an element:
+	     *       https://dom.spec.whatwg.org/#concept-create-element
+	     *       - Sync CE flag is true?
+	     *         - Constructor called.
+	     *         - Self-modification restrictions enforced.
+	     *       - Sync CE flag is false?
+	     *         - (Upgrade reaction enqueued.)
+	     *     - Attributes appended to element.
+	     *       (`attributeChangedCallback` reactions enqueued.)
+	     *     - Will execute script flag is true?
+	     *       - (Element queue popped from the custom element reactions stack.
+	     *         Reactions in the popped stack are invoked.)
+	     *   - (Element queue pushed to the custom element reactions stack.)
+	     *   - Insert the element:
+	     *     https://dom.spec.whatwg.org/#concept-node-insert
+	     *     - Shadow-including descendants are connected. During parsing
+	     *       construction, there are no shadow-*excluding* descendants.
+	     *       However, the constructor may have validly attached a shadow
+	     *       tree to itself and added descendants to that shadow tree.
+	     *       (`connectedCallback` reactions enqueued.)
+	     *   - (Element queue popped from the custom element reactions stack.
+	     *     Reactions in the popped stack are invoked.)
+	     *
+	     * @param {!Node} root
+	     * @param {!Set<Node>=} visitedImports
+	     */
 	
-	        // 8:
-	        /** @type {string} */
-	        var localName = name;
+	  }, {
+	    key: 'patchAndUpgradeTree',
+	    value: function patchAndUpgradeTree(root) {
+	      var _this2 = this;
 	
-	        // 9, 10: We do not support extends currently.
+	      var visitedImports = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new Set();
 	
-	        // 11, 12, 13: Our define() isn't rentrant-safe
+	      var elements = [];
 	
-	        // 14.1:
-	        /** @type {Object} */
-	        var prototype = constructor.prototype;
+	      var gatherElements = function gatherElements(element) {
+	        if (element.localName === 'link' && element.getAttribute('rel') === 'import') {
+	          // The HTML Imports polyfill sets a descendant element of the link to
+	          // the `import` property, specifically this is *not* a Document.
+	          var importNode = /** @type {?Node} */element.import;
 	
-	        // 14.2:
-	        if ((typeof prototype === 'undefined' ? 'undefined' : _typeof(prototype)) !== 'object') {
-	          throw new TypeError('Definition failed for \'' + name + '\': ' + 'constructor.prototype must be an object');
-	        }
+	          if (importNode instanceof Node && importNode.readyState === 'complete') {
+	            importNode.__CE_isImportDocument = true;
 	
-	        /**
-	         * @param {string} callbackName
-	         * @return {Function|undefined}
-	         */
-	        function getCallback(callbackName) {
-	          var callback = prototype[callbackName];
-	          if (callback !== undefined && typeof callback !== 'function') {
-	            throw new Error(localName + ' \'' + callbackName + '\' is not a Function');
+	            // Connected links are associated with the registry.
+	            importNode.__CE_hasRegistry = true;
+	          } else {
+	            // If this link's import root is not available, its contents can't be
+	            // walked. Wait for 'load' and walk it when it's ready.
+	            element.addEventListener('load', function () {
+	              var importNode = /** @type {!Node} */element.import;
+	
+	              if (importNode.__CE_documentLoadHandled) return;
+	              importNode.__CE_documentLoadHandled = true;
+	
+	              importNode.__CE_isImportDocument = true;
+	
+	              // Connected links are associated with the registry.
+	              importNode.__CE_hasRegistry = true;
+	
+	              // Clone the `visitedImports` set that was populated sync during
+	              // the `patchAndUpgradeTree` call that caused this 'load' handler to
+	              // be added. Then, remove *this* link's import node so that we can
+	              // walk that import again, even if it was partially walked later
+	              // during the same `patchAndUpgradeTree` call.
+	              var clonedVisitedImports = new Set(visitedImports);
+	              visitedImports.delete(importNode);
+	
+	              _this2.patchAndUpgradeTree(importNode, visitedImports);
+	            });
 	          }
-	          return callback;
+	        } else {
+	          elements.push(element);
+	        }
+	      };
+	
+	      // `walkDeepDescendantElements` populates (and internally checks against)
+	      // `visitedImports` when traversing a loaded import.
+	      Utilities.walkDeepDescendantElements(root, gatherElements, visitedImports);
+	
+	      if (this._hasPatches) {
+	        for (var i = 0; i < elements.length; i++) {
+	          this.patch(elements[i]);
+	        }
+	      }
+	
+	      for (var _i = 0; _i < elements.length; _i++) {
+	        this.upgradeElement(elements[_i]);
+	      }
+	    }
+	
+	    /**
+	     * @param {!Element} element
+	     */
+	
+	  }, {
+	    key: 'upgradeElement',
+	    value: function upgradeElement(element) {
+	      var currentState = element.__CE_state;
+	      if (currentState !== undefined) return;
+	
+	      var definition = this.localNameToDefinition(element.localName);
+	      if (!definition) return;
+	
+	      definition.constructionStack.push(element);
+	
+	      var constructor = definition.constructor;
+	      try {
+	        try {
+	          var result = new constructor();
+	          if (result !== element) {
+	            throw new Error('The custom element constructor did not produce the element being upgraded.');
+	          }
+	        } finally {
+	          definition.constructionStack.pop();
+	        }
+	      } catch (e) {
+	        element.__CE_state = _CustomElementState2.default.failed;
+	        throw e;
+	      }
+	
+	      element.__CE_state = _CustomElementState2.default.custom;
+	      element.__CE_definition = definition;
+	
+	      if (definition.attributeChangedCallback) {
+	        var observedAttributes = definition.observedAttributes;
+	        for (var i = 0; i < observedAttributes.length; i++) {
+	          var name = observedAttributes[i];
+	          var value = element.getAttribute(name);
+	          if (value !== null) {
+	            this.attributeChangedCallback(element, name, null, value, null);
+	          }
+	        }
+	      }
+	
+	      if (Utilities.isConnected(element)) {
+	        this.connectedCallback(element);
+	      }
+	    }
+	
+	    /**
+	     * @param {!Element} element
+	     */
+	
+	  }, {
+	    key: 'connectedCallback',
+	    value: function connectedCallback(element) {
+	      var definition = element.__CE_definition;
+	      if (definition.connectedCallback) {
+	        definition.connectedCallback.call(element);
+	      }
+	    }
+	
+	    /**
+	     * @param {!Element} element
+	     */
+	
+	  }, {
+	    key: 'disconnectedCallback',
+	    value: function disconnectedCallback(element) {
+	      var definition = element.__CE_definition;
+	      if (definition.disconnectedCallback) {
+	        definition.disconnectedCallback.call(element);
+	      }
+	    }
+	
+	    /**
+	     * @param {!Element} element
+	     * @param {string} name
+	     * @param {?string} oldValue
+	     * @param {?string} newValue
+	     * @param {?string} namespace
+	     */
+	
+	  }, {
+	    key: 'attributeChangedCallback',
+	    value: function attributeChangedCallback(element, name, oldValue, newValue, namespace) {
+	      var definition = element.__CE_definition;
+	      if (definition.attributeChangedCallback && definition.observedAttributes.indexOf(name) > -1) {
+	        definition.attributeChangedCallback.call(element, name, oldValue, newValue, namespace);
+	      }
+	    }
+	  }]);
+	
+	  return CustomElementInternals;
+	}();
+	
+	exports.default = CustomElementInternals;
+
+/***/ },
+/* 38 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.isValidCustomElementName = isValidCustomElementName;
+	exports.isConnected = isConnected;
+	exports.walkDeepDescendantElements = walkDeepDescendantElements;
+	exports.setPropertyUnchecked = setPropertyUnchecked;
+	var reservedTagList = new Set(['annotation-xml', 'color-profile', 'font-face', 'font-face-src', 'font-face-uri', 'font-face-format', 'font-face-name', 'missing-glyph']);
+	
+	/**
+	 * @param {string} localName
+	 * @returns {boolean}
+	 */
+	function isValidCustomElementName(localName) {
+	  var reserved = reservedTagList.has(localName);
+	  var validForm = /^[a-z][.0-9_a-z]*-[\-.0-9_a-z]*$/.test(localName);
+	  return !reserved && validForm;
+	}
+	
+	/**
+	 * @private
+	 * @param {!Node} node
+	 * @return {boolean}
+	 */
+	function isConnected(node) {
+	  // Use `Node#isConnected`, if defined.
+	  var nativeValue = node.isConnected;
+	  if (nativeValue !== undefined) {
+	    return nativeValue;
+	  }
+	
+	  /** @type {?Node|undefined} */
+	  var current = node;
+	  while (current && !(current.__CE_isImportDocument || current instanceof Document)) {
+	    current = current.parentNode || (window.ShadowRoot && current instanceof ShadowRoot ? current.host : undefined);
+	  }
+	  return !!(current && (current.__CE_isImportDocument || current instanceof Document));
+	}
+	
+	/**
+	 * @param {!Node} root
+	 * @param {!Node} start
+	 * @return {?Node}
+	 */
+	function nextSiblingOrAncestorSibling(root, start) {
+	  var node = start;
+	  while (node && node !== root && !node.nextSibling) {
+	    node = node.parentNode;
+	  }
+	  return !node || node === root ? null : node.nextSibling;
+	}
+	
+	/**
+	 * @param {!Node} root
+	 * @param {!Node} start
+	 * @return {?Node}
+	 */
+	function nextNode(root, start) {
+	  return start.firstChild ? start.firstChild : nextSiblingOrAncestorSibling(root, start);
+	}
+	
+	/**
+	 * @param {!Node} root
+	 * @param {!function(!Element)} callback
+	 * @param {!Set<Node>=} visitedImports
+	 */
+	function walkDeepDescendantElements(root, callback) {
+	  var visitedImports = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new Set();
+	
+	  var node = root;
+	  while (node) {
+	    if (node.nodeType === Node.ELEMENT_NODE) {
+	      var element = /** @type {!Element} */node;
+	
+	      callback(element);
+	
+	      var localName = element.localName;
+	      if (localName === 'link' && element.getAttribute('rel') === 'import') {
+	        // If this import (polyfilled or not) has it's root node available,
+	        // walk it.
+	        var importNode = /** @type {!Node} */element.import;
+	        if (importNode instanceof Node && !visitedImports.has(importNode)) {
+	          // Prevent multiple walks of the same import root.
+	          visitedImports.add(importNode);
+	
+	          for (var child = importNode.firstChild; child; child = child.nextSibling) {
+	            walkDeepDescendantElements(child, callback, visitedImports);
+	          }
 	        }
 	
-	        // 3, 4:
-	        var connectedCallback = getCallback('connectedCallback');
+	        // Ignore descendants of import links to prevent attempting to walk the
+	        // elements created by the HTML Imports polyfill that we just walked
+	        // above.
+	        node = nextSiblingOrAncestorSibling(root, element);
+	        continue;
+	      } else if (localName === 'template') {
+	        // Ignore descendants of templates. There shouldn't be any descendants
+	        // because they will be moved into `.content` during construction in
+	        // browsers that support template but, in case they exist and are still
+	        // waiting to be moved by a polyfill, they will be ignored.
+	        node = nextSiblingOrAncestorSibling(root, element);
+	        continue;
+	      }
 	
-	        // 5, 6:
-	        var disconnectedCallback = getCallback('disconnectedCallback');
+	      // Walk shadow roots.
+	      var shadowRoot = element.__CE_shadowRoot;
+	      if (shadowRoot) {
+	        for (var _child = shadowRoot.firstChild; _child; _child = _child.nextSibling) {
+	          walkDeepDescendantElements(_child, callback, visitedImports);
+	        }
+	      }
+	    }
 	
-	        // Divergence from spec: we always throw if attributeChangedCallback is
-	        // not a function.
+	    node = nextNode(root, node);
+	  }
+	}
 	
-	        // 7, 9.1:
-	        var attributeChangedCallback = getCallback('attributeChangedCallback');
+	/**
+	 * Used to suppress Closure's "Modifying the prototype is only allowed if the
+	 * constructor is in the same scope" warning without using
+	 * `@suppress {newCheckTypes, duplicate}` because `newCheckTypes` is too broad.
+	 *
+	 * @param {!Object} destination
+	 * @param {string} name
+	 * @param {*} value
+	 */
+	function setPropertyUnchecked(destination, name, value) {
+	  destination[name] = value;
+	}
+
+/***/ },
+/* 39 */
+/***/ function(module, exports) {
+
+	"use strict";
 	
-	        // 8, 9.2, 9.3:
-	        var observedAttributes = attributeChangedCallback && constructor['observedAttributes'] || [];
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	/**
+	 * @enum {number}
+	 */
+	var CustomElementState = {
+	  custom: 1,
+	  failed: 2
+	};
 	
-	        // 15:
-	        /** @type {CustomElementDefinition} */
-	        var definition = {
-	          name: name,
-	          localName: localName,
-	          constructor: constructor,
-	          connectedCallback: connectedCallback,
-	          disconnectedCallback: disconnectedCallback,
-	          attributeChangedCallback: attributeChangedCallback,
-	          observedAttributes: observedAttributes
-	        };
+	exports.default = CustomElementState;
+
+/***/ },
+/* 40 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
 	
-	        // 16:
-	        this._definitions.set(localName, definition);
-	        this._constructors.set(constructor, localName);
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 	
-	        // 17, 18, 19:
-	        this._upgradeDoc();
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	        // 20:
-	        /** @type {Deferred} **/
-	        var deferred = this._whenDefinedMap.get(localName);
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	var _DocumentConstructionObserver = __webpack_require__(41);
+	
+	var _DocumentConstructionObserver2 = _interopRequireDefault(_DocumentConstructionObserver);
+	
+	var _Deferred = __webpack_require__(42);
+	
+	var _Deferred2 = _interopRequireDefault(_Deferred);
+	
+	var _Utilities = __webpack_require__(38);
+	
+	var Utilities = _interopRequireWildcard(_Utilities);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	/**
+	 * @unrestricted
+	 */
+	var CustomElementRegistry = function () {
+	
+	  /**
+	   * @param {!CustomElementInternals} internals
+	   */
+	  function CustomElementRegistry(internals) {
+	    _classCallCheck(this, CustomElementRegistry);
+	
+	    /**
+	     * @private
+	     * @type {boolean}
+	     */
+	    this._elementDefinitionIsRunning = false;
+	
+	    /**
+	     * @private
+	     * @type {!CustomElementInternals}
+	     */
+	    this._internals = internals;
+	
+	    /**
+	     * @private
+	     * @type {!Map<string, !Deferred<undefined>>}
+	     */
+	    this._whenDefinedDeferred = new Map();
+	
+	    /**
+	     * The default flush callback triggers the document walk synchronously.
+	     * @private
+	     * @type {!Function}
+	     */
+	    this._flushCallback = function (fn) {
+	      return fn();
+	    };
+	
+	    /**
+	     * @private
+	     * @type {boolean}
+	     */
+	    this._flushPending = false;
+	
+	    /**
+	     * @private
+	     * @type {!Array<string>}
+	     */
+	    this._unflushedLocalNames = [];
+	
+	    /**
+	     * @private
+	     * @type {!DocumentConstructionObserver}
+	     */
+	    this._documentConstructionObserver = new _DocumentConstructionObserver2.default(internals, document);
+	  }
+	
+	  /**
+	   * @param {string} localName
+	   * @param {!Function} constructor
+	   */
+	
+	
+	  _createClass(CustomElementRegistry, [{
+	    key: 'define',
+	    value: function define(localName, constructor) {
+	      var _this = this;
+	
+	      if (!(constructor instanceof Function)) {
+	        throw new TypeError('Custom element constructors must be functions.');
+	      }
+	
+	      if (!Utilities.isValidCustomElementName(localName)) {
+	        throw new SyntaxError('The element name \'' + localName + '\' is not valid.');
+	      }
+	
+	      if (this._internals.localNameToDefinition(localName)) {
+	        throw new Error('A custom element with name \'' + localName + '\' has already been defined.');
+	      }
+	
+	      if (this._elementDefinitionIsRunning) {
+	        throw new Error('A custom element is already being defined.');
+	      }
+	      this._elementDefinitionIsRunning = true;
+	
+	      var connectedCallback = void 0;
+	      var disconnectedCallback = void 0;
+	      var adoptedCallback = void 0;
+	      var attributeChangedCallback = void 0;
+	      var observedAttributes = void 0;
+	      try {
+	        (function () {
+	          var getCallback = function getCallback(name) {
+	            var callbackValue = prototype[name];
+	            if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
+	              throw new Error('The \'' + name + '\' callback must be a function.');
+	            }
+	            return callbackValue;
+	          };
+	
+	          /** @type {!Object} */
+	          var prototype = constructor.prototype;
+	          if (!(prototype instanceof Object)) {
+	            throw new TypeError('The custom element constructor\'s prototype is not an object.');
+	          }
+	
+	          connectedCallback = getCallback('connectedCallback');
+	          disconnectedCallback = getCallback('disconnectedCallback');
+	          adoptedCallback = getCallback('adoptedCallback');
+	          attributeChangedCallback = getCallback('attributeChangedCallback');
+	          observedAttributes = constructor['observedAttributes'] || [];
+	        })();
+	      } catch (e) {
+	        return;
+	      } finally {
+	        this._elementDefinitionIsRunning = false;
+	      }
+	
+	      var definition = {
+	        localName: localName,
+	        constructor: constructor,
+	        connectedCallback: connectedCallback,
+	        disconnectedCallback: disconnectedCallback,
+	        adoptedCallback: adoptedCallback,
+	        attributeChangedCallback: attributeChangedCallback,
+	        observedAttributes: observedAttributes,
+	        constructionStack: []
+	      };
+	
+	      this._internals.setDefinition(localName, definition);
+	
+	      this._unflushedLocalNames.push(localName);
+	
+	      // If we've already called the flush callback and it hasn't called back yet,
+	      // don't call it again.
+	      if (!this._flushPending) {
+	        this._flushPending = true;
+	        this._flushCallback(function () {
+	          return _this._flush();
+	        });
+	      }
+	    }
+	  }, {
+	    key: '_flush',
+	    value: function _flush() {
+	      // If no new definitions were defined, don't attempt to flush. This could
+	      // happen if a flush callback keeps the function it is given and calls it
+	      // multiple times.
+	      if (this._flushPending === false) return;
+	
+	      this._flushPending = false;
+	      this._internals.patchAndUpgradeTree(document);
+	
+	      while (this._unflushedLocalNames.length > 0) {
+	        var localName = this._unflushedLocalNames.shift();
+	        var deferred = this._whenDefinedDeferred.get(localName);
 	        if (deferred) {
 	          deferred.resolve(undefined);
-	          this._whenDefinedMap.delete(localName);
 	        }
 	      }
+	    }
 	
-	      /**
-	       * Returns the constructor defined for `name`, or `null`.
-	       *
-	       * @param {string} name
-	       * @return {Function|undefined}
-	       */
+	    /**
+	     * @param {string} localName
+	     * @return {Function|undefined}
+	     */
 	
-	    }, {
-	      key: 'get',
-	      value: function get(name) {
-	        // https://html.spec.whatwg.org/multipage/scripting.html#custom-elements-api
-	        var def = this._definitions.get(name);
-	        return def ? def.constructor : undefined;
+	  }, {
+	    key: 'get',
+	    value: function get(localName) {
+	      var definition = this._internals.localNameToDefinition(localName);
+	      if (definition) {
+	        return definition.constructor;
 	      }
 	
-	      /**
-	       * Returns a `Promise` that resolves when a custom element for `name` has
-	       * been defined.
-	       *
-	       * @param {string} name
-	       * @return {!Promise}
-	       */
+	      return undefined;
+	    }
 	
-	    }, {
-	      key: 'whenDefined',
-	      value: function whenDefined(name) {
-	        // https://html.spec.whatwg.org/multipage/scripting.html#dom-customelementsregistry-whendefined
-	        var nameError = checkValidCustomElementName(name);
-	        if (nameError) return Promise.reject(nameError);
-	        if (this._definitions.has(name)) return Promise.resolve();
+	    /**
+	     * @param {string} localName
+	     * @return {!Promise<undefined>}
+	     */
 	
-	        /** @type {Deferred} **/
-	        var deferred = this._whenDefinedMap.get(name);
-	        if (deferred) return deferred.promise;
+	  }, {
+	    key: 'whenDefined',
+	    value: function whenDefined(localName) {
+	      if (!Utilities.isValidCustomElementName(localName)) {
+	        return Promise.reject(new SyntaxError('\'' + localName + '\' is not a valid custom element name.'));
+	      }
 	
-	        var resolve = void 0;
-	        var promise = new Promise(function (_resolve, _) {
-	          resolve = _resolve;
+	      var prior = this._whenDefinedDeferred.get(localName);
+	      if (prior) {
+	        return prior.toPromise();
+	      }
+	
+	      var deferred = new _Deferred2.default();
+	      this._whenDefinedDeferred.set(localName, deferred);
+	
+	      var definition = this._internals.localNameToDefinition(localName);
+	      // Resolve immediately only if the given local name has a definition *and*
+	      // the full document walk to upgrade elements with that local name has
+	      // already happened.
+	      if (definition && this._unflushedLocalNames.indexOf(localName) === -1) {
+	        deferred.resolve(undefined);
+	      }
+	
+	      return deferred.toPromise();
+	    }
+	  }, {
+	    key: 'polyfillWrapFlushCallback',
+	    value: function polyfillWrapFlushCallback(outer) {
+	      this._documentConstructionObserver.disconnect();
+	      var inner = this._flushCallback;
+	      this._flushCallback = function (flush) {
+	        return outer(function () {
+	          return inner(flush);
 	        });
-	        deferred = { promise: promise, resolve: resolve };
-	        this._whenDefinedMap.set(name, deferred);
-	        return promise;
-	      }
-	
-	      /**
-	       * Causes all pending mutation records to be processed, and thus all
-	       * customization, upgrades and custom element reactions to be called.
-	       * `enableFlush` must be true for this to work. Only use during tests!
-	       */
-	
-	    }, {
-	      key: 'flush',
-	      value: function flush() {
-	        if (this.enableFlush) {
-	          // console.warn("flush!!!");
-	          this._handleMutations(this._mainDocumentObserver.takeRecords());
-	          this._handleAttributeChange(this._attributeObserver.takeRecords());
-	          this._observers.forEach(
-	          /**
-	           * @param {!MutationObserver} observer
-	           * @this {CustomElementRegistry}
-	           */
-	          function (observer) {
-	            this._handleMutations(observer.takeRecords());
-	          }, this);
-	        }
-	      }
-	
-	      /**
-	       * Upgrade all existing in document elements. This process is expensive so
-	       * is optionally batched based on the state of HTMLImports. (Note,
-	       * this batching might not be necessary if instead of walking the dom,
-	       * a map of upgrade candidates was maintained.)
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_upgradeDoc',
-	      value: function _upgradeDoc() {
-	        var _this2 = this;
-	
-	        if (!this._upgradeScheduled) {
-	          this._upgradeScheduled = true;
-	          var onReady = function onReady() {
-	            _this2._upgradeScheduled = false;
-	            if (!_this2._mainDocumentObserver) {
-	              _this2._mainDocumentObserver = _this2._observeRoot(document);
-	            }
-	            _this2._addNodes(document.childNodes);
-	          };
-	          if (window['HTMLImports']) {
-	            window['HTMLImports']['whenReady'](onReady);
-	          } else {
-	            onReady();
-	          }
-	        }
-	      }
-	
-	      /**
-	       * @param {?HTMLElement} instance
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_setNewInstance',
-	      value: function _setNewInstance(instance) {
-	        this._newInstance = instance;
-	      }
-	
-	      /**
-	       * Observes a DOM root for mutations that trigger upgrades and reactions.
-	       * @param {Node} root
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_observeRoot',
-	      value: function _observeRoot(root) {
-	        //console.log('_observeRoot', root, root.baseURI);
-	        // console.assert(!root[_observerProp]);
-	        if (root[_observerProp] != null) {
-	          //console.warn(`Root ${root} is already observed`);
-	          return root[_observerProp];
-	        }
-	        root[_observerProp] = new MutationObserver(
-	        /** @type {function(Array<MutationRecord>, MutationObserver)} */
-	        this._handleMutations.bind(this));
-	        root[_observerProp].observe(root, { childList: true, subtree: true });
-	        if (this.enableFlush) {
-	          // this is memory leak, only use in tests
-	          this._observers.add(root[_observerProp]);
-	        }
-	        return root[_observerProp];
-	      }
-	
-	      /**
-	       * @param {Node} root
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_unobserveRoot',
-	      value: function _unobserveRoot(root) {
-	        if (root[_observerProp] != null) {
-	          root[_observerProp].disconnect();
-	          if (this.enableFlush) {
-	            this._observers.delete(root[_observerProp]);
-	          }
-	          root[_observerProp] = null;
-	        }
-	      }
-	
-	      /**
-	       * @param {!Array<!MutationRecord>} mutations
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_handleMutations',
-	      value: function _handleMutations(mutations) {
-	        for (var i = 0; i < mutations.length; i++) {
-	          /** @type {!MutationRecord} */
-	          var mutation = mutations[i];
-	          if (mutation.type === 'childList') {
-	            // Note: we can't get an ordering between additions and removals, and
-	            // so might diverge from spec reaction ordering
-	            var addedNodes = /** @type {!NodeList<!Node>} */mutation.addedNodes;
-	            var removedNodes = /** @type {!NodeList<!Node>} */mutation.removedNodes;
-	            this._addNodes(addedNodes);
-	            this._removeNodes(removedNodes);
-	          }
-	        }
-	      }
-	
-	      /**
-	       * @param {!(NodeList<!Node>|Array<!Node>)} nodeList
-	       * @param {?Set<Node>=} visitedNodes
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_addNodes',
-	      value: function _addNodes(nodeList, visitedNodes) {
-	        visitedNodes = visitedNodes || new Set();
-	
-	        for (var i = 0; i < nodeList.length; i++) {
-	          var root = nodeList[i];
-	
-	          if (!isElement(root)) {
-	            continue;
-	          }
-	
-	          // Since we're adding this node to an observed tree, we can unobserve
-	          this._unobserveRoot(root);
-	
-	          var walker = createTreeWalker(root);
-	          do {
-	            var node = /** @type {!HTMLElement} */walker.currentNode;
-	            this._addElement(node, visitedNodes);
-	          } while (walker.nextNode());
-	        }
-	      }
-	
-	      /**
-	       * @param {!HTMLElement} element
-	       * @param {!Set<Node>=} visitedNodes
-	       */
-	
-	    }, {
-	      key: '_addElement',
-	      value: function _addElement(element, visitedNodes) {
-	        if (visitedNodes.has(element)) return;
-	        visitedNodes.add(element);
-	
-	        /** @type {?CustomElementDefinition} */
-	        var definition = this._definitions.get(element.localName);
-	        if (definition) {
-	          if (!element[_upgradedProp]) {
-	            this._upgradeElement(element, definition, true);
-	          }
-	          if (element[_upgradedProp] && !element[_attachedProp] && isConnected(element)) {
-	            element[_attachedProp] = true;
-	            if (definition.connectedCallback) {
-	              definition.connectedCallback.call(element);
-	            }
-	          }
-	        }
-	        if (element.shadowRoot) {
-	          // TODO(justinfagnani): do we need to check that the shadowRoot
-	          // is observed?
-	          this._addNodes(element.shadowRoot.childNodes, visitedNodes);
-	        }
-	        if (isHtmlImport(element)) {
-	          this._addImport( /** @type {!HTMLLinkElement} */element, visitedNodes);
-	        }
-	      }
-	
-	      /**
-	       * @param {!HTMLLinkElement} link
-	       * @param {!Set<Node>=} visitedNodes
-	       */
-	
-	    }, {
-	      key: '_addImport',
-	      value: function _addImport(link, visitedNodes) {
-	        var _this3 = this;
-	
-	        // During a tree walk to add or upgrade nodes, we may encounter multiple
-	        // HTML imports that reference the same document, and may encounter
-	        // imports in various states of loading.
-	
-	        // First, we only want to process the first import for a document in a
-	        // walk, so we check visitedNodes for the document, not the link.
-	        //
-	        // Second, for documents that haven't loaded yet, we only want to add one
-	        // listener, regardless of the number of links or walks, so we track
-	        // pending loads in _pendingHtmlImportUrls.
-	
-	        // Check to see if the import is loaded
-	        /** @type {?Document} */
-	        var _import = link.import;
-	        if (_import) {
-	          // The import is loaded, but only process the first link element
-	          if (visitedNodes.has(_import)) return;
-	          visitedNodes.add(_import);
-	
-	          // The import is loaded observe it
-	          if (!_import[_observerProp]) this._observeRoot(_import);
-	
-	          // walk the document
-	          this._addNodes(_import.childNodes, visitedNodes);
-	        } else {
-	          var _ret = function () {
-	            // The import is not loaded, so wait for it
-	            /** @type {string} */
-	            var importUrl = link.href;
-	            if (_this3._pendingHtmlImportUrls.has(importUrl)) return {
-	                v: void 0
-	              };
-	            _this3._pendingHtmlImportUrls.add(importUrl);
-	
-	            /**
-	             * @const
-	             * @type {CustomElementRegistry}
-	             */
-	            var _this = _this3;
-	            var onLoad = function onLoad() {
-	              link.removeEventListener('load', /** @type {function(Event)} */onLoad);
-	              if (!link.import[_observerProp]) _this._observeRoot(link.import);
-	              // We don't pass visitedNodes because this is async and not part of
-	              // the current tree walk.
-	              _this._addNodes(link.import.childNodes);
-	            };
-	            link.addEventListener('load', onLoad);
-	          }();
-	
-	          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-	        }
-	      }
-	
-	      /**
-	       * @param {NodeList} nodeList
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_removeNodes',
-	      value: function _removeNodes(nodeList) {
-	        for (var i = 0; i < nodeList.length; i++) {
-	          var root = nodeList[i];
-	
-	          if (!isElement(root)) {
-	            continue;
-	          }
-	
-	          // Since we're detatching this element from an observed root, we need to
-	          // reobserve it.
-	          // TODO(justinfagnani): can we do this in a microtask so we don't thrash
-	          // on creating and destroying MutationObservers on batch DOM mutations?
-	          this._observeRoot(root);
-	
-	          var walker = createTreeWalker(root);
-	          do {
-	            var node = walker.currentNode;
-	            if (node[_upgradedProp] && node[_attachedProp]) {
-	              node[_attachedProp] = false;
-	              var definition = this._definitions.get(node.localName);
-	              if (definition && definition.disconnectedCallback) {
-	                definition.disconnectedCallback.call(node);
-	              }
-	            }
-	          } while (walker.nextNode());
-	        }
-	      }
-	
-	      /**
-	       * Upgrades or customizes a custom element.
-	       *
-	       * @param {HTMLElement} element
-	       * @param {CustomElementDefinition} definition
-	       * @param {boolean} callConstructor
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_upgradeElement',
-	      value: function _upgradeElement(element, definition, callConstructor) {
-	        var prototype = definition.constructor.prototype;
-	        element.__proto__ = prototype;
-	        if (callConstructor) {
-	          this._setNewInstance(element);
-	          new definition.constructor();
-	          element[_upgradedProp] = true;
-	          console.assert(this._newInstance == null);
-	        }
-	
-	        var observedAttributes = definition.observedAttributes;
-	        var attributeChangedCallback = definition.attributeChangedCallback;
-	        if (attributeChangedCallback && observedAttributes.length > 0) {
-	          this._attributeObserver.observe(element, {
-	            attributes: true,
-	            attributeOldValue: true,
-	            attributeFilter: observedAttributes
-	          });
-	
-	          // Trigger attributeChangedCallback for existing attributes.
-	          // https://html.spec.whatwg.org/multipage/scripting.html#upgrades
-	          for (var i = 0; i < observedAttributes.length; i++) {
-	            var name = observedAttributes[i];
-	            if (element.hasAttribute(name)) {
-	              var value = element.getAttribute(name);
-	              attributeChangedCallback.call(element, name, null, value, null);
-	            }
-	          }
-	        }
-	      }
-	
-	      /**
-	       * @param {!Array<!MutationRecord>} mutations
-	       * @private
-	       */
-	
-	    }, {
-	      key: '_handleAttributeChange',
-	      value: function _handleAttributeChange(mutations) {
-	        for (var i = 0; i < mutations.length; i++) {
-	          var mutation = mutations[i];
-	          if (mutation.type === 'attributes') {
-	            var target = /** @type {HTMLElement} */mutation.target;
-	            // We should be gaurenteed to have a definition because this mutation
-	            // observer is only observing custom elements observedAttributes
-	            var definition = this._definitions.get(target.localName);
-	            var name = /** @type {!string} */mutation.attributeName;
-	            var oldValue = mutation.oldValue;
-	            var newValue = target.getAttribute(name);
-	            // Skip changes that were handled synchronously by setAttribute
-	            if (newValue !== oldValue) {
-	              var namespace = mutation.attributeNamespace;
-	              definition.attributeChangedCallback.call(target, name, oldValue, newValue, namespace);
-	            }
-	          }
-	        }
-	      }
-	    }]);
-	
-	    return CustomElementRegistry;
-	  }();
-	
-	  // Closure Compiler Exports
-	
-	
-	  window['CustomElementRegistry'] = CustomElementRegistry;
-	  CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
-	  CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
-	  CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
-	  CustomElementRegistry.prototype['flush'] = CustomElementRegistry.prototype.flush;
-	  CustomElementRegistry.prototype['polyfilled'] = true;
-	  // TODO(justinfagnani): remove these in production code
-	  CustomElementRegistry.prototype['_observeRoot'] = CustomElementRegistry.prototype._observeRoot;
-	  CustomElementRegistry.prototype['_addImport'] = CustomElementRegistry.prototype._addImport;
-	
-	  // patch window.HTMLElement
-	
-	  /** @const */
-	  var origHTMLElement = window.HTMLElement;
-	  CustomElementRegistry.prototype['nativeHTMLElement'] = origHTMLElement;
-	  /**
-	   * @type {function(new: HTMLElement)}
-	   */
-	  var newHTMLElement = function HTMLElement() {
-	    var customElements = _customElements();
-	
-	    // If there's an being upgraded, return that
-	    if (customElements._newInstance) {
-	      var i = customElements._newInstance;
-	      customElements._newInstance = null;
-	      return i;
+	      };
 	    }
-	    if (this.constructor) {
-	      // Find the tagname of the constructor and create a new element with it
-	      var tagName = customElements._constructors.get(this.constructor);
-	      return _createElement(document, tagName, undefined, false);
+	  }]);
+	
+	  return CustomElementRegistry;
+	}();
+	
+	// Closure compiler exports.
+	
+	
+	exports.default = CustomElementRegistry;
+	window['CustomElementRegistry'] = CustomElementRegistry;
+	CustomElementRegistry.prototype['define'] = CustomElementRegistry.prototype.define;
+	CustomElementRegistry.prototype['get'] = CustomElementRegistry.prototype.get;
+	CustomElementRegistry.prototype['whenDefined'] = CustomElementRegistry.prototype.whenDefined;
+	CustomElementRegistry.prototype['polyfillWrapFlushCallback'] = CustomElementRegistry.prototype.polyfillWrapFlushCallback;
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var DocumentConstructionObserver = function () {
+	  function DocumentConstructionObserver(internals, doc) {
+	    _classCallCheck(this, DocumentConstructionObserver);
+	
+	    /**
+	     * @type {!CustomElementInternals}
+	     */
+	    this._internals = internals;
+	
+	    /**
+	     * @type {!Document}
+	     */
+	    this._document = doc;
+	
+	    /**
+	     * @type {MutationObserver|undefined}
+	     */
+	    this._observer = undefined;
+	
+	    // Simulate tree construction for all currently accessible nodes in the
+	    // document.
+	    this._internals.patchAndUpgradeTree(this._document);
+	
+	    if (this._document.readyState === 'loading') {
+	      this._observer = new MutationObserver(this._handleMutations.bind(this));
+	
+	      // Nodes created by the parser are given to the observer *before* the next
+	      // task runs. Inline scripts are run in a new task. This means that the
+	      // observer will be able to handle the newly parsed nodes before the inline
+	      // script is run.
+	      this._observer.observe(this._document, {
+	        childList: true,
+	        subtree: true
+	      });
 	    }
-	    throw new Error('Unknown constructor. Did you call customElements.define()?');
-	  };
-	  window.HTMLElement = newHTMLElement;
-	  // By setting the patched HTMLElement's prototype property to the native
-	  // HTMLElement's prototype we make sure that:
-	  //     document.createElement('a') instanceof HTMLElement
-	  // works because instanceof uses HTMLElement.prototype, which is on the
-	  // ptototype chain of built-in elements.
-	  window.HTMLElement.prototype = origHTMLElement.prototype;
+	  }
 	
-	  // patch doc.createElement
-	  // TODO(justinfagnani): why is the cast neccessary?
-	  // Can we fix the Closure DOM externs?
-	  var _nativeCreateElement =
-	  /** @type {function(this:Document, string, (Object|undefined)=): !HTMLElement}}*/
-	  document.createElement;
-	
-	  /**
-	   * Creates a new element and upgrades it if it's a custom element.
-	   * @param {!Document} doc
-	   * @param {!string} tagName
-	   * @param {Object|undefined} options
-	   * @param {boolean} callConstructor whether or not to call the elements
-	   *   constructor after upgrading. If an element is created by calling its
-	   *   constructor, then `callConstructor` should be false to prevent double
-	   *   initialization.
-	   */
-	  function _createElement(doc, tagName, options, callConstructor) {
-	    var customElements = _customElements();
-	    var element = options ? _nativeCreateElement.call(doc, tagName, options) : _nativeCreateElement.call(doc, tagName);
-	    var definition = customElements._definitions.get(tagName.toLowerCase());
-	    if (definition) {
-	      customElements._upgradeElement(element, definition, callConstructor);
+	  _createClass(DocumentConstructionObserver, [{
+	    key: 'disconnect',
+	    value: function disconnect() {
+	      if (this._observer) {
+	        this._observer.disconnect();
+	      }
 	    }
-	    customElements._observeRoot(element);
-	    return element;
-	  };
-	  document.createElement = function (tagName, options) {
-	    return _createElement(document, tagName, options, true);
-	  };
 	
-	  // patch document.createElementNS
+	    /**
+	     * @param {!Array<!MutationRecord>} mutations
+	     */
 	
-	  var HTMLNS = 'http://www.w3.org/1999/xhtml';
+	  }, {
+	    key: '_handleMutations',
+	    value: function _handleMutations(mutations) {
+	      // Once the document's `readyState` is 'interactive' or 'complete', all new
+	      // nodes created within that document will be the result of script and
+	      // should be handled by patching.
+	      var readyState = this._document.readyState;
+	      if (readyState === 'interactive' || readyState === 'complete') {
+	        this.disconnect();
+	      }
 	
-	  /** @type {function(this:Document,string,string):Element} */
-	  var _nativeCreateElementNS = document.createElementNS;
-	  document.createElementNS =
-	  /** @type {function(this:Document,(string|null),string):!Element} */
-	  function (namespaceURI, qualifiedName) {
-	    if (namespaceURI === HTMLNS) {
-	      return document.createElement(qualifiedName);
-	    } else {
-	      return _nativeCreateElementNS.call(document, namespaceURI, qualifiedName);
+	      for (var i = 0; i < mutations.length; i++) {
+	        var addedNodes = mutations[i].addedNodes;
+	        for (var j = 0; j < addedNodes.length; j++) {
+	          var node = addedNodes[j];
+	          this._internals.patchAndUpgradeTree(node);
+	        }
+	      }
 	    }
-	  };
+	  }]);
 	
-	  // patch Element.attachShadow
+	  return DocumentConstructionObserver;
+	}();
 	
-	  /** @type {function({closed: boolean})} */
-	  var _nativeAttachShadow = Element.prototype['attachShadow'];
-	  if (_nativeAttachShadow) {
-	    Object.defineProperty(Element.prototype, 'attachShadow', {
-	      value: function value(options) {
-	        /** @type {!Node} */
-	        var root = _nativeAttachShadow.call(this, options);
-	        /** @type {CustomElementRegistry} */
-	        var customElements = _customElements();
-	        customElements._observeRoot(root);
-	        return root;
+	exports.default = DocumentConstructionObserver;
+
+/***/ },
+/* 42 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	/**
+	 * @template T
+	 */
+	var Deferred = function () {
+	  function Deferred() {
+	    var _this = this;
+	
+	    _classCallCheck(this, Deferred);
+	
+	    /**
+	     * @private
+	     * @type {T|undefined}
+	     */
+	    this._value = undefined;
+	
+	    /**
+	     * @private
+	     * @type {Function|undefined}
+	     */
+	    this._resolve = undefined;
+	
+	    /**
+	     * @private
+	     * @type {!Promise<T>}
+	     */
+	    this._promise = new Promise(function (resolve) {
+	      _this._resolve = resolve;
+	
+	      if (_this._value) {
+	        resolve(_this._value);
 	      }
 	    });
 	  }
 	
-	  // patch document.importNode
+	  /**
+	   * @param {T} value
+	   */
 	
-	  var _nativeImportNode = document.importNode;
-	  document.importNode = function (node, deep) {
-	    var clone = /** @type{!Node} */_nativeImportNode.call(document, node, deep);
-	    var customElements = _customElements();
-	    var nodes = isElement(clone) ? [clone] : clone.childNodes;
-	    /** @type {CustomElementRegistry} */_customElements()._addNodes(nodes);
+	
+	  _createClass(Deferred, [{
+	    key: 'resolve',
+	    value: function resolve(value) {
+	      if (this._value) {
+	        throw new Error('Already resolved.');
+	      }
+	
+	      this._value = value;
+	
+	      if (this._resolve) {
+	        this._resolve(value);
+	      }
+	    }
+	
+	    /**
+	     * @return {!Promise<T>}
+	     */
+	
+	  }, {
+	    key: 'toPromise',
+	    value: function toPromise() {
+	      return this._promise;
+	    }
+	  }]);
+	
+	  return Deferred;
+	}();
+	
+	exports.default = Deferred;
+
+/***/ },
+/* 43 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	exports.default = function (internals) {
+	  window['HTMLElement'] = function () {
+	    /**
+	     * @type {function(new: HTMLElement): !HTMLElement}
+	     */
+	    function HTMLElement() {
+	      // This should really be `new.target` but `new.target` can't be emulated
+	      // in ES5. Assuming the user keeps the default value of the constructor's
+	      // prototype's `constructor` property, this is equivalent.
+	      /** @type {!Function} */
+	      var constructor = this.constructor;
+	
+	      var definition = internals.constructorToDefinition(constructor);
+	      if (!definition) {
+	        throw new Error('The custom element being constructed was not registered with `customElements`.');
+	      }
+	
+	      var constructionStack = definition.constructionStack;
+	
+	      if (constructionStack.length === 0) {
+	        var _element = _Native2.default.Document_createElement.call(document, definition.localName);
+	        Object.setPrototypeOf(_element, constructor.prototype);
+	        _element.__CE_state = _CustomElementState2.default.custom;
+	        _element.__CE_definition = definition;
+	        internals.patch(_element);
+	        return _element;
+	      }
+	
+	      var lastIndex = constructionStack.length - 1;
+	      var element = constructionStack[lastIndex];
+	      if (element === _AlreadyConstructedMarker2.default) {
+	        throw new Error('The HTMLElement constructor was either called reentrantly for this constructor or called multiple times.');
+	      }
+	      constructionStack[lastIndex] = _AlreadyConstructedMarker2.default;
+	
+	      Object.setPrototypeOf(element, constructor.prototype);
+	      internals.patch( /** @type {!HTMLElement} */element);
+	
+	      return element;
+	    }
+	
+	    HTMLElement.prototype = _Native2.default.HTMLElement.prototype;
+	
+	    return HTMLElement;
+	  }();
+	};
+	
+	var _Native = __webpack_require__(44);
+	
+	var _Native2 = _interopRequireDefault(_Native);
+	
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	var _CustomElementState = __webpack_require__(39);
+	
+	var _CustomElementState2 = _interopRequireDefault(_CustomElementState);
+	
+	var _AlreadyConstructedMarker = __webpack_require__(45);
+	
+	var _AlreadyConstructedMarker2 = _interopRequireDefault(_AlreadyConstructedMarker);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	;
+	
+	/**
+	 * @param {!CustomElementInternals} internals
+	 */
+
+/***/ },
+/* 44 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = {
+	  Document_createElement: window.Document.prototype.createElement,
+	  Document_createElementNS: window.Document.prototype.createElementNS,
+	  Document_importNode: window.Document.prototype.importNode,
+	  Document_prepend: window.Document.prototype['prepend'],
+	  Document_append: window.Document.prototype['append'],
+	  Node_cloneNode: window.Node.prototype.cloneNode,
+	  Node_appendChild: window.Node.prototype.appendChild,
+	  Node_insertBefore: window.Node.prototype.insertBefore,
+	  Node_removeChild: window.Node.prototype.removeChild,
+	  Node_replaceChild: window.Node.prototype.replaceChild,
+	  Node_textContent: Object.getOwnPropertyDescriptor(window.Node.prototype, 'textContent'),
+	  Element_attachShadow: window.Element.prototype['attachShadow'],
+	  Element_innerHTML: Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML'),
+	  Element_getAttribute: window.Element.prototype.getAttribute,
+	  Element_setAttribute: window.Element.prototype.setAttribute,
+	  Element_removeAttribute: window.Element.prototype.removeAttribute,
+	  Element_getAttributeNS: window.Element.prototype.getAttributeNS,
+	  Element_setAttributeNS: window.Element.prototype.setAttributeNS,
+	  Element_removeAttributeNS: window.Element.prototype.removeAttributeNS,
+	  Element_insertAdjacentElement: window.Element.prototype['insertAdjacentElement'],
+	  Element_prepend: window.Element.prototype['prepend'],
+	  Element_append: window.Element.prototype['append'],
+	  Element_before: window.Element.prototype['before'],
+	  Element_after: window.Element.prototype['after'],
+	  Element_replaceWith: window.Element.prototype['replaceWith'],
+	  Element_remove: window.Element.prototype['remove'],
+	  HTMLElement: window.HTMLElement,
+	  HTMLElement_innerHTML: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'innerHTML'),
+	  HTMLElement_insertAdjacentElement: window.HTMLElement.prototype['insertAdjacentElement']
+	};
+
+/***/ },
+/* 45 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	/**
+	 * This class exists only to work around Closure's lack of a way to describe
+	 * singletons. It represents the 'already constructed marker' used in custom
+	 * element construction stacks.
+	 *
+	 * https://html.spec.whatwg.org/#concept-already-constructed-marker
+	 */
+	var AlreadyConstructedMarker = function AlreadyConstructedMarker() {
+	  _classCallCheck(this, AlreadyConstructedMarker);
+	};
+	
+	exports.default = new AlreadyConstructedMarker();
+
+/***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	exports.default = function (internals) {
+	  Utilities.setPropertyUnchecked(Document.prototype, 'createElement',
+	  /**
+	   * @this {Document}
+	   * @param {string} localName
+	   * @return {!Element}
+	   */
+	  function (localName) {
+	    // Only create custom elements if this document is associated with the registry.
+	    if (this.__CE_hasRegistry) {
+	      var definition = internals.localNameToDefinition(localName);
+	      if (definition) {
+	        return new definition.constructor();
+	      }
+	    }
+	
+	    var result = /** @type {!Element} */
+	    _Native2.default.Document_createElement.call(this, localName);
+	    internals.patch(result);
+	    return result;
+	  });
+	
+	  Utilities.setPropertyUnchecked(Document.prototype, 'importNode',
+	  /**
+	   * @this {Document}
+	   * @param {!Node} node
+	   * @param {boolean=} deep
+	   * @return {!Node}
+	   */
+	  function (node, deep) {
+	    var clone = _Native2.default.Document_importNode.call(this, node, deep);
+	    // Only create custom elements if this document is associated with the registry.
+	    if (!this.__CE_hasRegistry) {
+	      internals.patchTree(clone);
+	    } else {
+	      internals.patchAndUpgradeTree(clone);
+	    }
 	    return clone;
-	  };
+	  });
 	
-	  // patch Element.setAttribute & removeAttribute
+	  var NS_HTML = "http://www.w3.org/1999/xhtml";
 	
-	  var _nativeSetAttribute = Element.prototype.setAttribute;
-	  Element.prototype['setAttribute'] = function (name, value) {
-	    changeAttribute(this, name, value, _nativeSetAttribute);
-	  };
-	  var _nativeRemoveAttribute = Element.prototype.removeAttribute;
-	  Element.prototype['removeAttribute'] = function (name) {
-	    changeAttribute(this, name, null, _nativeRemoveAttribute);
-	  };
+	  Utilities.setPropertyUnchecked(Document.prototype, 'createElementNS',
+	  /**
+	   * @this {Document}
+	   * @param {?string} namespace
+	   * @param {string} localName
+	   * @return {!Element}
+	   */
+	  function (namespace, localName) {
+	    // Only create custom elements if this document is associated with the registry.
+	    if (this.__CE_hasRegistry && (namespace === null || namespace === NS_HTML)) {
+	      var definition = internals.localNameToDefinition(localName);
+	      if (definition) {
+	        return new definition.constructor();
+	      }
+	    }
 	
-	  function changeAttribute(element, name, value, operation) {
-	    name = name.toLowerCase();
-	    var oldValue = element.getAttribute(name);
-	    operation.call(element, name, value);
+	    var result = /** @type {!Element} */
+	    _Native2.default.Document_createElementNS.call(this, namespace, localName);
+	    internals.patch(result);
+	    return result;
+	  });
 	
-	    // Bail if this wasn't a fully upgraded custom element
-	    if (element[_upgradedProp] == true) {
-	      var definition = _customElements()._definitions.get(element.localName);
-	      var observedAttributes = definition.observedAttributes;
-	      var attributeChangedCallback = definition.attributeChangedCallback;
-	      if (attributeChangedCallback && observedAttributes.indexOf(name) >= 0) {
-	        var newValue = element.getAttribute(name);
-	        if (newValue !== oldValue) {
-	          attributeChangedCallback.call(element, name, oldValue, newValue, null);
+	  (0, _ParentNode2.default)(internals, Document.prototype, {
+	    prepend: _Native2.default.Document_prepend,
+	    append: _Native2.default.Document_append
+	  });
+	};
+	
+	var _Native = __webpack_require__(44);
+	
+	var _Native2 = _interopRequireDefault(_Native);
+	
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	var _Utilities = __webpack_require__(38);
+	
+	var Utilities = _interopRequireWildcard(_Utilities);
+	
+	var _ParentNode = __webpack_require__(47);
+	
+	var _ParentNode2 = _interopRequireDefault(_ParentNode);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	;
+	
+	/**
+	 * @param {!CustomElementInternals} internals
+	 */
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	exports.default = function (internals, destination, builtIn) {
+	  /**
+	   * @param {...(!Node|string)} nodes
+	   */
+	  destination['prepend'] = function () {
+	    for (var _len = arguments.length, nodes = Array(_len), _key = 0; _key < _len; _key++) {
+	      nodes[_key] = arguments[_key];
+	    }
+	
+	    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
+	    var connectedBefore = /** @type {!Array<!Node>} */nodes.filter(function (node) {
+	      // DocumentFragments are not connected and will not be added to the list.
+	      return node instanceof Node && Utilities.isConnected(node);
+	    });
+	
+	    builtIn.prepend.apply(this, nodes);
+	
+	    for (var i = 0; i < connectedBefore.length; i++) {
+	      internals.disconnectTree(connectedBefore[i]);
+	    }
+	
+	    if (Utilities.isConnected(this)) {
+	      for (var _i = 0; _i < nodes.length; _i++) {
+	        var node = nodes[_i];
+	        if (node instanceof Element) {
+	          internals.connectTree(node);
 	        }
 	      }
 	    }
-	  }
+	  };
 	
-	  Object.defineProperty(window, 'customElements', {
-	    value: new CustomElementRegistry(),
-	    configurable: true,
-	    enumerable: true
-	  });
+	  /**
+	   * @param {...(!Node|string)} nodes
+	   */
+	  destination['append'] = function () {
+	    for (var _len2 = arguments.length, nodes = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+	      nodes[_key2] = arguments[_key2];
+	    }
 	
-	  // TODO(justinfagnani): Remove. Temporary for backward-compatibility
-	  window['CustomElements'] = {
-	    takeRecords: function takeRecords() {
-	      if (_customElements().flush) _customElements().flush();
+	    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
+	    var connectedBefore = /** @type {!Array<!Node>} */nodes.filter(function (node) {
+	      // DocumentFragments are not connected and will not be added to the list.
+	      return node instanceof Node && Utilities.isConnected(node);
+	    });
+	
+	    builtIn.append.apply(this, nodes);
+	
+	    for (var i = 0; i < connectedBefore.length; i++) {
+	      internals.disconnectTree(connectedBefore[i]);
+	    }
+	
+	    if (Utilities.isConnected(this)) {
+	      for (var _i2 = 0; _i2 < nodes.length; _i2++) {
+	        var node = nodes[_i2];
+	        if (node instanceof Element) {
+	          internals.connectTree(node);
+	        }
+	      }
 	    }
 	  };
-	})();
+	};
+	
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	var _Utilities = __webpack_require__(38);
+	
+	var Utilities = _interopRequireWildcard(_Utilities);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	/**
+	 * @typedef {{
+	 *   prepend: !function(...(!Node|string)),
+	  *  append: !function(...(!Node|string)),
+	 * }}
+	 */
+	var ParentNodeNativeMethods = void 0;
+	
+	/**
+	 * @param {!CustomElementInternals} internals
+	 * @param {!Object} destination
+	 * @param {!ParentNodeNativeMethods} builtIn
+	 */
+	;
 
 /***/ },
-/* 37 */
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	exports.default = function (internals) {
+	  // `Node#nodeValue` is implemented on `Attr`.
+	  // `Node#textContent` is implemented on `Attr`, `Element`.
+	
+	  Utilities.setPropertyUnchecked(Node.prototype, 'insertBefore',
+	  /**
+	   * @this {Node}
+	   * @param {!Node} node
+	   * @param {?Node} refNode
+	   * @return {!Node}
+	   */
+	  function (node, refNode) {
+	    if (node instanceof DocumentFragment) {
+	      var insertedNodes = Array.prototype.slice.apply(node.childNodes);
+	      var _nativeResult = _Native2.default.Node_insertBefore.call(this, node, refNode);
+	
+	      // DocumentFragments can't be connected, so `disconnectTree` will never
+	      // need to be called on a DocumentFragment's children after inserting it.
+	
+	      if (Utilities.isConnected(this)) {
+	        for (var i = 0; i < insertedNodes.length; i++) {
+	          internals.connectTree(insertedNodes[i]);
+	        }
+	      }
+	
+	      return _nativeResult;
+	    }
+	
+	    var nodeWasConnected = Utilities.isConnected(node);
+	    var nativeResult = _Native2.default.Node_insertBefore.call(this, node, refNode);
+	
+	    if (nodeWasConnected) {
+	      internals.disconnectTree(node);
+	    }
+	
+	    if (Utilities.isConnected(this)) {
+	      internals.connectTree(node);
+	    }
+	
+	    return nativeResult;
+	  });
+	
+	  Utilities.setPropertyUnchecked(Node.prototype, 'appendChild',
+	  /**
+	   * @this {Node}
+	   * @param {!Node} node
+	   * @return {!Node}
+	   */
+	  function (node) {
+	    if (node instanceof DocumentFragment) {
+	      var insertedNodes = Array.prototype.slice.apply(node.childNodes);
+	      var _nativeResult2 = _Native2.default.Node_appendChild.call(this, node);
+	
+	      // DocumentFragments can't be connected, so `disconnectTree` will never
+	      // need to be called on a DocumentFragment's children after inserting it.
+	
+	      if (Utilities.isConnected(this)) {
+	        for (var i = 0; i < insertedNodes.length; i++) {
+	          internals.connectTree(insertedNodes[i]);
+	        }
+	      }
+	
+	      return _nativeResult2;
+	    }
+	
+	    var nodeWasConnected = Utilities.isConnected(node);
+	    var nativeResult = _Native2.default.Node_appendChild.call(this, node);
+	
+	    if (nodeWasConnected) {
+	      internals.disconnectTree(node);
+	    }
+	
+	    if (Utilities.isConnected(this)) {
+	      internals.connectTree(node);
+	    }
+	
+	    return nativeResult;
+	  });
+	
+	  Utilities.setPropertyUnchecked(Node.prototype, 'cloneNode',
+	  /**
+	   * @this {Node}
+	   * @param {boolean=} deep
+	   * @return {!Node}
+	   */
+	  function (deep) {
+	    var clone = _Native2.default.Node_cloneNode.call(this, deep);
+	    // Only create custom elements if this element's owner document is
+	    // associated with the registry.
+	    if (!this.ownerDocument.__CE_hasRegistry) {
+	      internals.patchTree(clone);
+	    } else {
+	      internals.patchAndUpgradeTree(clone);
+	    }
+	    return clone;
+	  });
+	
+	  Utilities.setPropertyUnchecked(Node.prototype, 'removeChild',
+	  /**
+	   * @this {Node}
+	   * @param {!Node} node
+	   * @return {!Node}
+	   */
+	  function (node) {
+	    var nodeWasConnected = Utilities.isConnected(node);
+	    var nativeResult = _Native2.default.Node_removeChild.call(this, node);
+	
+	    if (nodeWasConnected) {
+	      internals.disconnectTree(node);
+	    }
+	
+	    return nativeResult;
+	  });
+	
+	  Utilities.setPropertyUnchecked(Node.prototype, 'replaceChild',
+	  /**
+	   * @this {Node}
+	   * @param {!Node} nodeToInsert
+	   * @param {!Node} nodeToRemove
+	   * @return {!Node}
+	   */
+	  function (nodeToInsert, nodeToRemove) {
+	    if (nodeToInsert instanceof DocumentFragment) {
+	      var insertedNodes = Array.prototype.slice.apply(nodeToInsert.childNodes);
+	      var _nativeResult3 = _Native2.default.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+	
+	      // DocumentFragments can't be connected, so `disconnectTree` will never
+	      // need to be called on a DocumentFragment's children after inserting it.
+	
+	      if (Utilities.isConnected(this)) {
+	        internals.disconnectTree(nodeToRemove);
+	        for (var i = 0; i < insertedNodes.length; i++) {
+	          internals.connectTree(insertedNodes[i]);
+	        }
+	      }
+	
+	      return _nativeResult3;
+	    }
+	
+	    var nodeToInsertWasConnected = Utilities.isConnected(nodeToInsert);
+	    var nativeResult = _Native2.default.Node_replaceChild.call(this, nodeToInsert, nodeToRemove);
+	    var thisIsConnected = Utilities.isConnected(this);
+	
+	    if (thisIsConnected) {
+	      internals.disconnectTree(nodeToRemove);
+	    }
+	
+	    if (nodeToInsertWasConnected) {
+	      internals.disconnectTree(nodeToInsert);
+	    }
+	
+	    if (thisIsConnected) {
+	      internals.connectTree(nodeToInsert);
+	    }
+	
+	    return nativeResult;
+	  });
+	
+	  function patch_textContent(destination, baseDescriptor) {
+	    Object.defineProperty(destination, 'textContent', {
+	      enumerable: baseDescriptor.enumerable,
+	      configurable: true,
+	      get: baseDescriptor.get,
+	      set: /** @this {Node} */function set(assignedValue) {
+	        // If this is a text node then there are no nodes to disconnect.
+	        if (this.nodeType === Node.TEXT_NODE) {
+	          baseDescriptor.set.call(this, assignedValue);
+	          return;
+	        }
+	
+	        var removedNodes = undefined;
+	        // Checking for `firstChild` is faster than reading `childNodes.length`
+	        // to compare with 0.
+	        if (this.firstChild) {
+	          // Using `childNodes` is faster than `children`, even though we only
+	          // care about elements.
+	          var childNodes = this.childNodes;
+	          var childNodesLength = childNodes.length;
+	          if (childNodesLength > 0 && Utilities.isConnected(this)) {
+	            // Copying an array by iterating is faster than using slice.
+	            removedNodes = new Array(childNodesLength);
+	            for (var i = 0; i < childNodesLength; i++) {
+	              removedNodes[i] = childNodes[i];
+	            }
+	          }
+	        }
+	
+	        baseDescriptor.set.call(this, assignedValue);
+	
+	        if (removedNodes) {
+	          for (var _i = 0; _i < removedNodes.length; _i++) {
+	            internals.disconnectTree(removedNodes[_i]);
+	          }
+	        }
+	      }
+	    });
+	  }
+	
+	  if (_Native2.default.Node_textContent && _Native2.default.Node_textContent.get) {
+	    patch_textContent(Node.prototype, _Native2.default.Node_textContent);
+	  } else {
+	    internals.addPatch(function (element) {
+	      patch_textContent(element, {
+	        enumerable: true,
+	        configurable: true,
+	        // NOTE: This implementation of the `textContent` getter assumes that
+	        // text nodes' `textContent` getter will not be patched.
+	        get: /** @this {Node} */function get() {
+	          /** @type {!Array<string>} */
+	          var parts = [];
+	
+	          for (var i = 0; i < this.childNodes.length; i++) {
+	            parts.push(this.childNodes[i].textContent);
+	          }
+	
+	          return parts.join('');
+	        },
+	        set: /** @this {Node} */function set(assignedValue) {
+	          while (this.firstChild) {
+	            _Native2.default.Node_removeChild.call(this, this.firstChild);
+	          }
+	          _Native2.default.Node_appendChild.call(this, document.createTextNode(assignedValue));
+	        }
+	      });
+	    });
+	  }
+	};
+	
+	var _Native = __webpack_require__(44);
+	
+	var _Native2 = _interopRequireDefault(_Native);
+	
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	var _Utilities = __webpack_require__(38);
+	
+	var Utilities = _interopRequireWildcard(_Utilities);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	;
+	
+	/**
+	 * @param {!CustomElementInternals} internals
+	 */
+
+/***/ },
+/* 49 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	exports.default = function (internals) {
+	  if (_Native2.default.Element_attachShadow) {
+	    Utilities.setPropertyUnchecked(Element.prototype, 'attachShadow',
+	    /**
+	     * @this {Element}
+	     * @param {!{mode: string}} init
+	     * @return {ShadowRoot}
+	     */
+	    function (init) {
+	      var shadowRoot = _Native2.default.Element_attachShadow.call(this, init);
+	      this.__CE_shadowRoot = shadowRoot;
+	      return shadowRoot;
+	    });
+	  } else {
+	    console.warn('Custom Elements: `Element#attachShadow` was not patched.');
+	  }
+	
+	  function patch_innerHTML(destination, baseDescriptor) {
+	    Object.defineProperty(destination, 'innerHTML', {
+	      enumerable: baseDescriptor.enumerable,
+	      configurable: true,
+	      get: baseDescriptor.get,
+	      set: /** @this {Element} */function set(htmlString) {
+	        var _this = this;
+	
+	        var isConnected = Utilities.isConnected(this);
+	
+	        // NOTE: In IE11, when using the native `innerHTML` setter, all nodes
+	        // that were previously descendants of the context element have all of
+	        // their children removed as part of the set - the entire subtree is
+	        // 'disassembled'. This work around walks the subtree *before* using the
+	        // native setter.
+	        /** @type {!Array<!Element>|undefined} */
+	        var removedElements = undefined;
+	        if (isConnected) {
+	          removedElements = [];
+	          Utilities.walkDeepDescendantElements(this, function (element) {
+	            if (element !== _this) {
+	              removedElements.push(element);
+	            }
+	          });
+	        }
+	
+	        baseDescriptor.set.call(this, htmlString);
+	
+	        if (removedElements) {
+	          for (var i = 0; i < removedElements.length; i++) {
+	            var element = removedElements[i];
+	            if (element.__CE_state === _CustomElementState2.default.custom) {
+	              internals.disconnectedCallback(element);
+	            }
+	          }
+	        }
+	
+	        // Only create custom elements if this element's owner document is
+	        // associated with the registry.
+	        if (!this.ownerDocument.__CE_hasRegistry) {
+	          internals.patchTree(this);
+	        } else {
+	          internals.patchAndUpgradeTree(this);
+	        }
+	        return htmlString;
+	      }
+	    });
+	  }
+	
+	  if (_Native2.default.Element_innerHTML && _Native2.default.Element_innerHTML.get) {
+	    patch_innerHTML(Element.prototype, _Native2.default.Element_innerHTML);
+	  } else if (_Native2.default.HTMLElement_innerHTML && _Native2.default.HTMLElement_innerHTML.get) {
+	    patch_innerHTML(HTMLElement.prototype, _Native2.default.HTMLElement_innerHTML);
+	  } else {
+	    (function () {
+	
+	      /** @type {HTMLDivElement} */
+	      var rawDiv = _Native2.default.Document_createElement.call(document, 'div');
+	
+	      internals.addPatch(function (element) {
+	        patch_innerHTML(element, {
+	          enumerable: true,
+	          configurable: true,
+	          // Implements getting `innerHTML` by performing an unpatched `cloneNode`
+	          // of the element and returning the resulting element's `innerHTML`.
+	          // TODO: Is this too expensive?
+	          get: /** @this {Element} */function get() {
+	            return _Native2.default.Node_cloneNode.call(this, true).innerHTML;
+	          },
+	          // Implements setting `innerHTML` by creating an unpatched element,
+	          // setting `innerHTML` of that element and replacing the target
+	          // element's children with those of the unpatched element.
+	          set: /** @this {Element} */function set(assignedValue) {
+	            // NOTE: re-route to `content` for `template` elements.
+	            // We need to do this because `template.appendChild` does not
+	            // route into `template.content`.
+	            /** @type {!Node} */
+	            var content = this.localName === 'template' ? /** @type {!HTMLTemplateElement} */this.content : this;
+	            rawDiv.innerHTML = assignedValue;
+	
+	            while (content.childNodes.length > 0) {
+	              _Native2.default.Node_removeChild.call(content, content.childNodes[0]);
+	            }
+	            while (rawDiv.childNodes.length > 0) {
+	              _Native2.default.Node_appendChild.call(content, rawDiv.childNodes[0]);
+	            }
+	          }
+	        });
+	      });
+	    })();
+	  }
+	
+	  Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
+	  /**
+	   * @this {Element}
+	   * @param {string} name
+	   * @param {string} newValue
+	   */
+	  function (name, newValue) {
+	    // Fast path for non-custom elements.
+	    if (this.__CE_state !== _CustomElementState2.default.custom) {
+	      return _Native2.default.Element_setAttribute.call(this, name, newValue);
+	    }
+	
+	    var oldValue = _Native2.default.Element_getAttribute.call(this, name);
+	    _Native2.default.Element_setAttribute.call(this, name, newValue);
+	    newValue = _Native2.default.Element_getAttribute.call(this, name);
+	    if (oldValue !== newValue) {
+	      internals.attributeChangedCallback(this, name, oldValue, newValue, null);
+	    }
+	  });
+	
+	  Utilities.setPropertyUnchecked(Element.prototype, 'setAttributeNS',
+	  /**
+	   * @this {Element}
+	   * @param {?string} namespace
+	   * @param {string} name
+	   * @param {string} newValue
+	   */
+	  function (namespace, name, newValue) {
+	    // Fast path for non-custom elements.
+	    if (this.__CE_state !== _CustomElementState2.default.custom) {
+	      return _Native2.default.Element_setAttributeNS.call(this, namespace, name, newValue);
+	    }
+	
+	    var oldValue = _Native2.default.Element_getAttributeNS.call(this, namespace, name);
+	    _Native2.default.Element_setAttributeNS.call(this, namespace, name, newValue);
+	    newValue = _Native2.default.Element_getAttributeNS.call(this, namespace, name);
+	    if (oldValue !== newValue) {
+	      internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
+	    }
+	  });
+	
+	  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttribute',
+	  /**
+	   * @this {Element}
+	   * @param {string} name
+	   */
+	  function (name) {
+	    // Fast path for non-custom elements.
+	    if (this.__CE_state !== _CustomElementState2.default.custom) {
+	      return _Native2.default.Element_removeAttribute.call(this, name);
+	    }
+	
+	    var oldValue = _Native2.default.Element_getAttribute.call(this, name);
+	    _Native2.default.Element_removeAttribute.call(this, name);
+	    if (oldValue !== null) {
+	      internals.attributeChangedCallback(this, name, oldValue, null, null);
+	    }
+	  });
+	
+	  Utilities.setPropertyUnchecked(Element.prototype, 'removeAttributeNS',
+	  /**
+	   * @this {Element}
+	   * @param {?string} namespace
+	   * @param {string} name
+	   */
+	  function (namespace, name) {
+	    // Fast path for non-custom elements.
+	    if (this.__CE_state !== _CustomElementState2.default.custom) {
+	      return _Native2.default.Element_removeAttributeNS.call(this, namespace, name);
+	    }
+	
+	    var oldValue = _Native2.default.Element_getAttributeNS.call(this, namespace, name);
+	    _Native2.default.Element_removeAttributeNS.call(this, namespace, name);
+	    // In older browsers, `Element#getAttributeNS` may return the empty string
+	    // instead of null if the attribute does not exist. For details, see;
+	    // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS#Notes
+	    var newValue = _Native2.default.Element_getAttributeNS.call(this, namespace, name);
+	    if (oldValue !== newValue) {
+	      internals.attributeChangedCallback(this, name, oldValue, newValue, namespace);
+	    }
+	  });
+	
+	  function patch_insertAdjacentElement(destination, baseMethod) {
+	    Utilities.setPropertyUnchecked(destination, 'insertAdjacentElement',
+	    /**
+	     * @this {Element}
+	     * @param {string} where
+	     * @param {!Element} element
+	     * @return {?Element}
+	     */
+	    function (where, element) {
+	      var wasConnected = Utilities.isConnected(element);
+	      var insertedElement = /** @type {!Element} */
+	      baseMethod.call(this, where, element);
+	
+	      if (wasConnected) {
+	        internals.disconnectTree(element);
+	      }
+	
+	      if (Utilities.isConnected(insertedElement)) {
+	        internals.connectTree(element);
+	      }
+	      return insertedElement;
+	    });
+	  }
+	
+	  if (_Native2.default.HTMLElement_insertAdjacentElement) {
+	    patch_insertAdjacentElement(HTMLElement.prototype, _Native2.default.HTMLElement_insertAdjacentElement);
+	  } else if (_Native2.default.Element_insertAdjacentElement) {
+	    patch_insertAdjacentElement(Element.prototype, _Native2.default.Element_insertAdjacentElement);
+	  } else {
+	    console.warn('Custom Elements: `Element#insertAdjacentElement` was not patched.');
+	  }
+	
+	  (0, _ParentNode2.default)(internals, Element.prototype, {
+	    prepend: _Native2.default.Element_prepend,
+	    append: _Native2.default.Element_append
+	  });
+	
+	  (0, _ChildNode2.default)(internals, Element.prototype, {
+	    before: _Native2.default.Element_before,
+	    after: _Native2.default.Element_after,
+	    replaceWith: _Native2.default.Element_replaceWith,
+	    remove: _Native2.default.Element_remove
+	  });
+	};
+	
+	var _Native = __webpack_require__(44);
+	
+	var _Native2 = _interopRequireDefault(_Native);
+	
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	var _CustomElementState = __webpack_require__(39);
+	
+	var _CustomElementState2 = _interopRequireDefault(_CustomElementState);
+	
+	var _Utilities = __webpack_require__(38);
+	
+	var Utilities = _interopRequireWildcard(_Utilities);
+	
+	var _ParentNode = __webpack_require__(47);
+	
+	var _ParentNode2 = _interopRequireDefault(_ParentNode);
+	
+	var _ChildNode = __webpack_require__(50);
+	
+	var _ChildNode2 = _interopRequireDefault(_ChildNode);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	;
+	
+	/**
+	 * @param {!CustomElementInternals} internals
+	 */
+
+/***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	exports.default = function (internals, destination, builtIn) {
+	  /**
+	   * @param {...(!Node|string)} nodes
+	   */
+	  destination['before'] = function () {
+	    for (var _len = arguments.length, nodes = Array(_len), _key = 0; _key < _len; _key++) {
+	      nodes[_key] = arguments[_key];
+	    }
+	
+	    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
+	    var connectedBefore = /** @type {!Array<!Node>} */nodes.filter(function (node) {
+	      // DocumentFragments are not connected and will not be added to the list.
+	      return node instanceof Node && Utilities.isConnected(node);
+	    });
+	
+	    builtIn.before.apply(this, nodes);
+	
+	    for (var i = 0; i < connectedBefore.length; i++) {
+	      internals.disconnectTree(connectedBefore[i]);
+	    }
+	
+	    if (Utilities.isConnected(this)) {
+	      for (var _i = 0; _i < nodes.length; _i++) {
+	        var node = nodes[_i];
+	        if (node instanceof Element) {
+	          internals.connectTree(node);
+	        }
+	      }
+	    }
+	  };
+	
+	  /**
+	   * @param {...(!Node|string)} nodes
+	   */
+	  destination['after'] = function () {
+	    for (var _len2 = arguments.length, nodes = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+	      nodes[_key2] = arguments[_key2];
+	    }
+	
+	    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
+	    var connectedBefore = /** @type {!Array<!Node>} */nodes.filter(function (node) {
+	      // DocumentFragments are not connected and will not be added to the list.
+	      return node instanceof Node && Utilities.isConnected(node);
+	    });
+	
+	    builtIn.after.apply(this, nodes);
+	
+	    for (var i = 0; i < connectedBefore.length; i++) {
+	      internals.disconnectTree(connectedBefore[i]);
+	    }
+	
+	    if (Utilities.isConnected(this)) {
+	      for (var _i2 = 0; _i2 < nodes.length; _i2++) {
+	        var node = nodes[_i2];
+	        if (node instanceof Element) {
+	          internals.connectTree(node);
+	        }
+	      }
+	    }
+	  };
+	
+	  /**
+	   * @param {...(!Node|string)} nodes
+	   */
+	  destination['replaceWith'] = function () {
+	    for (var _len3 = arguments.length, nodes = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+	      nodes[_key3] = arguments[_key3];
+	    }
+	
+	    // TODO: Fix this for when one of `nodes` is a DocumentFragment!
+	    var connectedBefore = /** @type {!Array<!Node>} */nodes.filter(function (node) {
+	      // DocumentFragments are not connected and will not be added to the list.
+	      return node instanceof Node && Utilities.isConnected(node);
+	    });
+	
+	    var wasConnected = Utilities.isConnected(this);
+	
+	    builtIn.replaceWith.apply(this, nodes);
+	
+	    for (var i = 0; i < connectedBefore.length; i++) {
+	      internals.disconnectTree(connectedBefore[i]);
+	    }
+	
+	    if (wasConnected) {
+	      internals.disconnectTree(this);
+	      for (var _i3 = 0; _i3 < nodes.length; _i3++) {
+	        var node = nodes[_i3];
+	        if (node instanceof Element) {
+	          internals.connectTree(node);
+	        }
+	      }
+	    }
+	  };
+	
+	  destination['remove'] = function () {
+	    var wasConnected = Utilities.isConnected(this);
+	
+	    builtIn.remove.call(this);
+	
+	    if (wasConnected) {
+	      internals.disconnectTree(this);
+	    }
+	  };
+	};
+	
+	var _CustomElementInternals = __webpack_require__(37);
+	
+	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
+	
+	var _Utilities = __webpack_require__(38);
+	
+	var Utilities = _interopRequireWildcard(_Utilities);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	/**
+	 * @typedef {{
+	 *   before: !function(...(!Node|string)),
+	 *   after: !function(...(!Node|string)),
+	 *   replaceWith: !function(...(!Node|string)),
+	 *   remove: !function(),
+	 * }}
+	 */
+	var ChildNodeNativeMethods = void 0;
+	
+	/**
+	 * @param {!CustomElementInternals} internals
+	 * @param {!Object} destination
+	 * @param {!ChildNodeNativeMethods} builtIn
+	 */
+	;
+
+/***/ },
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4062,27 +5297,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	'use strict';
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _flush = __webpack_require__(39);
+	var _flush = __webpack_require__(53);
 	
-	var _observeChanges = __webpack_require__(40);
+	var _observeChanges = __webpack_require__(54);
 	
-	var _nativeMethods = __webpack_require__(41);
+	var _nativeMethods = __webpack_require__(55);
 	
 	var nativeMethods = _interopRequireWildcard(_nativeMethods);
 	
-	var _nativeTree = __webpack_require__(42);
+	var _nativeTree = __webpack_require__(56);
 	
 	var nativeTree = _interopRequireWildcard(_nativeTree);
 	
-	var _patchBuiltins = __webpack_require__(44);
+	var _patchBuiltins = __webpack_require__(58);
 	
-	var _patchEvents = __webpack_require__(49);
+	var _patchEvents = __webpack_require__(63);
 	
-	var _attachShadow = __webpack_require__(50);
+	var _attachShadow = __webpack_require__(64);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -4115,7 +5350,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 38 */
+/* 52 */
 /***/ function(module, exports) {
 
 	/**
@@ -4238,7 +5473,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 39 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4259,7 +5494,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.enqueue = enqueue;
 	exports.flush = flush;
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
@@ -4288,7 +5523,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	flush.list = flushList;
 
 /***/ },
-/* 40 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4312,7 +5547,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	exports.filterMutations = filterMutations;
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
@@ -4437,7 +5672,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 41 */
+/* 55 */
 /***/ function(module, exports) {
 
 	/**
@@ -4466,7 +5701,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var removeEventListener = exports.removeEventListener = Element.prototype.removeEventListener;
 
 /***/ },
-/* 42 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4499,7 +5734,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.innerHTML = innerHTML;
 	exports.textContent = textContent;
 	
-	var _innerHTML = __webpack_require__(43);
+	var _innerHTML = __webpack_require__(57);
 	
 	var nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL, null, false);
 	
@@ -4602,7 +5837,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 43 */
+/* 57 */
 /***/ function(module, exports) {
 
 	/**
@@ -4717,7 +5952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 44 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4737,21 +5972,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.patchBuiltins = patchBuiltins;
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _logicalMutation = __webpack_require__(45);
+	var _logicalMutation = __webpack_require__(59);
 	
 	var mutation = _interopRequireWildcard(_logicalMutation);
 	
-	var _patchAccessors = __webpack_require__(48);
+	var _patchAccessors = __webpack_require__(62);
 	
-	var _logicalProperties = __webpack_require__(46);
+	var _logicalProperties = __webpack_require__(60);
 	
-	var _patchEvents = __webpack_require__(49);
+	var _patchEvents = __webpack_require__(63);
 	
-	var _attachShadow2 = __webpack_require__(50);
+	var _attachShadow2 = __webpack_require__(64);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -4930,7 +6165,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 45 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4958,21 +6193,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.cloneNode = cloneNode;
 	exports.importNode = importNode;
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _logicalProperties = __webpack_require__(46);
+	var _logicalProperties = __webpack_require__(60);
 	
-	var _logicalTree = __webpack_require__(47);
+	var _logicalTree = __webpack_require__(61);
 	
 	var logicalTree = _interopRequireWildcard(_logicalTree);
 	
-	var _nativeMethods = __webpack_require__(41);
+	var _nativeMethods = __webpack_require__(55);
 	
 	var nativeMethods = _interopRequireWildcard(_nativeMethods);
 	
-	var _nativeTree = __webpack_require__(42);
+	var _nativeTree = __webpack_require__(56);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -5382,7 +6617,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 46 */
+/* 60 */
 /***/ function(module, exports) {
 
 	/**
@@ -5411,7 +6646,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 47 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5433,11 +6668,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.recordInsertBefore = recordInsertBefore;
 	exports.recordRemoveChild = recordRemoveChild;
 	
-	var _logicalProperties = __webpack_require__(46);
+	var _logicalProperties = __webpack_require__(60);
 	
-	var _patchAccessors = __webpack_require__(48);
+	var _patchAccessors = __webpack_require__(62);
 	
-	var _nativeTree = __webpack_require__(42);
+	var _nativeTree = __webpack_require__(56);
 	
 	function recordInsertBefore(node, container, ref_node) {
 	  (0, _patchAccessors.patchInsideElementAccessors)(container);
@@ -5543,7 +6778,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 48 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5565,15 +6800,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.patchAccessors = patchAccessors;
 	exports.patchShadowRootAccessors = patchShadowRootAccessors;
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _innerHTML = __webpack_require__(43);
+	var _innerHTML = __webpack_require__(57);
 	
-	var _logicalProperties = __webpack_require__(46);
+	var _logicalProperties = __webpack_require__(60);
 	
-	var _nativeTree = __webpack_require__(42);
+	var _nativeTree = __webpack_require__(56);
 	
 	var nativeTree = _interopRequireWildcard(_nativeTree);
 	
@@ -5912,7 +7147,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 49 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5937,11 +7172,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.removeEventListener = removeEventListener;
 	exports.patchEvents = patchEvents;
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _nativeMethods = __webpack_require__(41);
+	var _nativeMethods = __webpack_require__(55);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -6308,7 +7543,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 50 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -6329,23 +7564,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.ShadyRoot = undefined;
 	exports.attachShadow = attachShadow;
 	
-	var _arraySplice = __webpack_require__(51);
+	var _arraySplice = __webpack_require__(65);
 	
-	var _utils = __webpack_require__(38);
+	var _utils = __webpack_require__(52);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _flush = __webpack_require__(39);
+	var _flush = __webpack_require__(53);
 	
-	var _logicalTree = __webpack_require__(47);
+	var _logicalTree = __webpack_require__(61);
 	
-	var _nativeMethods = __webpack_require__(41);
+	var _nativeMethods = __webpack_require__(55);
 	
-	var _nativeTree = __webpack_require__(42);
+	var _nativeTree = __webpack_require__(56);
 	
-	var _patchAccessors = __webpack_require__(48);
+	var _patchAccessors = __webpack_require__(62);
 	
-	var _distributor = __webpack_require__(52);
+	var _distributor = __webpack_require__(66);
 	
 	var _distributor2 = _interopRequireDefault(_distributor);
 	
@@ -6612,7 +7847,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	(0, _patchAccessors.patchShadowRootAccessors)(ShadyRoot.prototype);
 
 /***/ },
-/* 51 */
+/* 65 */
 /***/ function(module, exports) {
 
 	/**
@@ -6856,7 +8091,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 52 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -6877,9 +8112,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _nativeMethods = __webpack_require__(41);
+	var _nativeMethods = __webpack_require__(55);
 	
-	var _nativeTree = __webpack_require__(42);
+	var _nativeTree = __webpack_require__(56);
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
@@ -7106,7 +8341,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 53 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7124,12 +8359,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	Small module to load ShadyCSS and CustomStyle together
 	*/
 	
-	__webpack_require__(54);
+	__webpack_require__(68);
 	
-	__webpack_require__(66);
+	__webpack_require__(80);
 
 /***/ },
-/* 54 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7149,43 +8384,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	// TODO(dfreedm): consider spliting into separate global
 	
 	
-	var _cssParse = __webpack_require__(55);
+	var _cssParse = __webpack_require__(69);
 	
-	var _styleSettings = __webpack_require__(56);
+	var _styleSettings = __webpack_require__(70);
 	
-	var _styleTransformer = __webpack_require__(57);
+	var _styleTransformer = __webpack_require__(71);
 	
 	var _styleTransformer2 = _interopRequireDefault(_styleTransformer);
 	
-	var _styleUtil = __webpack_require__(58);
+	var _styleUtil = __webpack_require__(72);
 	
 	var StyleUtil = _interopRequireWildcard(_styleUtil);
 	
-	var _styleProperties = __webpack_require__(59);
+	var _styleProperties = __webpack_require__(73);
 	
 	var _styleProperties2 = _interopRequireDefault(_styleProperties);
 	
-	var _templateMap = __webpack_require__(61);
+	var _templateMap = __webpack_require__(75);
 	
 	var _templateMap2 = _interopRequireDefault(_templateMap);
 	
-	var _stylePlaceholder = __webpack_require__(62);
+	var _stylePlaceholder = __webpack_require__(76);
 	
 	var _stylePlaceholder2 = _interopRequireDefault(_stylePlaceholder);
 	
-	var _styleInfo = __webpack_require__(60);
+	var _styleInfo = __webpack_require__(74);
 	
 	var _styleInfo2 = _interopRequireDefault(_styleInfo);
 	
-	var _styleCache = __webpack_require__(63);
+	var _styleCache = __webpack_require__(77);
 	
 	var _styleCache2 = _interopRequireDefault(_styleCache);
 	
-	var _applyShim = __webpack_require__(64);
+	var _applyShim = __webpack_require__(78);
 	
 	var _applyShim2 = _interopRequireDefault(_applyShim);
 	
-	var _documentWatcher = __webpack_require__(65);
+	var _documentWatcher = __webpack_require__(79);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -7614,7 +8849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	window['ShadyCSS'] = new ShadyCSS();
 
 /***/ },
-/* 55 */
+/* 69 */
 /***/ function(module, exports) {
 
 	/**
@@ -7808,7 +9043,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var AT_START = '@';
 
 /***/ },
-/* 56 */
+/* 70 */
 /***/ function(module, exports) {
 
 	/**
@@ -7857,7 +9092,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 57 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7878,11 +9113,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _styleUtil = __webpack_require__(58);
+	var _styleUtil = __webpack_require__(72);
 	
 	var StyleUtil = _interopRequireWildcard(_styleUtil);
 	
-	var _styleSettings = __webpack_require__(56);
+	var _styleSettings = __webpack_require__(70);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -8202,7 +9437,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = new StyleTransformer();
 
 /***/ },
-/* 58 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -8234,9 +9469,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.processVariableAndFallback = processVariableAndFallback;
 	exports.setElementClassRaw = setElementClassRaw;
 	
-	var _styleSettings = __webpack_require__(56);
+	var _styleSettings = __webpack_require__(70);
 	
-	var _cssParse = __webpack_require__(55);
+	var _cssParse = __webpack_require__(69);
 	
 	function toCssText(rules, callback) {
 	  if (typeof rules === 'string') {
@@ -8405,7 +9640,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 59 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -8426,19 +9661,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _cssParse = __webpack_require__(55);
+	var _cssParse = __webpack_require__(69);
 	
-	var _styleSettings = __webpack_require__(56);
+	var _styleSettings = __webpack_require__(70);
 	
-	var _styleTransformer = __webpack_require__(57);
+	var _styleTransformer = __webpack_require__(71);
 	
 	var _styleTransformer2 = _interopRequireDefault(_styleTransformer);
 	
-	var _styleUtil = __webpack_require__(58);
+	var _styleUtil = __webpack_require__(72);
 	
 	var StyleUtil = _interopRequireWildcard(_styleUtil);
 	
-	var _styleInfo = __webpack_require__(60);
+	var _styleInfo = __webpack_require__(74);
 	
 	var _styleInfo2 = _interopRequireDefault(_styleInfo);
 	
@@ -9002,7 +10237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = new StyleProperties();
 
 /***/ },
-/* 60 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -9023,7 +10258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _templateMap = __webpack_require__(61);
+	var _templateMap = __webpack_require__(75);
 	
 	var _templateMap2 = _interopRequireDefault(_templateMap);
 	
@@ -9093,7 +10328,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = StyleInfo;
 
 /***/ },
-/* 61 */
+/* 75 */
 /***/ function(module, exports) {
 
 	/**
@@ -9114,7 +10349,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = {};
 
 /***/ },
-/* 62 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -9133,9 +10368,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _styleUtil = __webpack_require__(58);
+	var _styleUtil = __webpack_require__(72);
 	
-	var _styleSettings = __webpack_require__(56);
+	var _styleSettings = __webpack_require__(70);
 	
 	var placeholderMap = {};
 	
@@ -9153,7 +10388,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = placeholderMap;
 
 /***/ },
-/* 63 */
+/* 77 */
 /***/ function(module, exports) {
 
 	/**
@@ -9230,7 +10465,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = StyleCache;
 
 /***/ },
-/* 64 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -9312,13 +10547,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _styleUtil = __webpack_require__(58);
+	var _styleUtil = __webpack_require__(72);
 	
-	var _templateMap = __webpack_require__(61);
+	var _templateMap = __webpack_require__(75);
 	
 	var _templateMap2 = _interopRequireDefault(_templateMap);
 	
-	var _styleInfo = __webpack_require__(60);
+	var _styleInfo = __webpack_require__(74);
 	
 	var _styleInfo2 = _interopRequireDefault(_styleInfo);
 	
@@ -9634,7 +10869,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = applyShim;
 
 /***/ },
-/* 65 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -9654,9 +10889,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.flush = undefined;
 	
-	var _styleSettings = __webpack_require__(56);
+	var _styleSettings = __webpack_require__(70);
 	
-	var _styleTransformer = __webpack_require__(57);
+	var _styleTransformer = __webpack_require__(71);
 	
 	var _styleTransformer2 = _interopRequireDefault(_styleTransformer);
 	
@@ -9763,7 +10998,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 66 */
+/* 80 */
 /***/ function(module, exports) {
 
 	/**

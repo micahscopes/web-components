@@ -66,20 +66,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	// ES2015 polyfills required for the polyfills to work in older browsers.
 	__webpack_require__(1).shim();
-	__webpack_require__(26).shim();
-	__webpack_require__(31).polyfill();
+	__webpack_require__(27).shim();
+	__webpack_require__(32).polyfill();
 	
 	// We have to include this first so that it can patch native. This must be done
 	// before any polyfills are loaded.
-	__webpack_require__(34);
+	__webpack_require__(35);
 	
 	// Template polyfill is necessary to use shadycss in IE11
 	// this comes before custom elements because of
 	// https://github.com/webcomponents/template/blob/master/template.js#L39
-	__webpack_require__(35);
+	__webpack_require__(36);
 	
 	// This comes after the native shim because it requries it to be patched first.
-	__webpack_require__(36);
+	__webpack_require__(37);
 	
 	// Force the polyfill in Safari 10.0.0 and 10.0.1.
 	var _window = window,
@@ -98,8 +98,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	// ShadyDOM comes first. Both because it may need to be forced and the
 	// ShadyCSS polyfill requires it to function.
-	__webpack_require__(51);
-	__webpack_require__(67);
+	__webpack_require__(52);
+	__webpack_require__(68);
 
 /***/ },
 /* 1 */
@@ -110,8 +110,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var define = __webpack_require__(2);
 	
 	var implementation = __webpack_require__(6);
-	var getPolyfill = __webpack_require__(24);
-	var shim = __webpack_require__(25);
+	var getPolyfill = __webpack_require__(25);
+	var shim = __webpack_require__(26);
 	
 	// eslint-disable-next-line no-unused-vars
 	var boundFromShim = function from(array) {
@@ -464,7 +464,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var nonWS = ['\x85', '\u200B', '\uFFFE'].join('');
 	var nonWSregex = new RegExp('[' + nonWS + ']', 'g');
 	var hasNonWS = bind.call(Function.call, RegExp.prototype.test, nonWSregex);
-	var invalidHexLiteral = /^[\-\+]0x[0-9a-f]+$/i;
+	var invalidHexLiteral = /^[-+]0x[0-9a-f]+$/i;
 	var isInvalidHexLiteral = bind.call(Function.call, RegExp.prototype.test, invalidHexLiteral);
 	
 	// whitespace from: http://es5.github.io/#x15.5.4.20
@@ -685,6 +685,77 @@ return /******/ (function(modules) { // webpackBootstrap
 		// https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero
 		SameValueZero: function SameValueZero(x, y) {
 			return x === y || $isNaN(x) && $isNaN(y);
+		},
+	
+		/**
+	  * 7.3.2 GetV (V, P)
+	  * 1. Assert: IsPropertyKey(P) is true.
+	  * 2. Let O be ToObject(V).
+	  * 3. ReturnIfAbrupt(O).
+	  * 4. Return O.[[Get]](P, V).
+	  */
+		GetV: function GetV(V, P) {
+			// 7.3.2.1
+			if (!this.IsPropertyKey(P)) {
+				throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+			}
+	
+			// 7.3.2.2-3
+			var O = this.ToObject(V);
+	
+			// 7.3.2.4
+			return O[P];
+		},
+	
+		/**
+	  * 7.3.9 - http://www.ecma-international.org/ecma-262/6.0/#sec-getmethod
+	  * 1. Assert: IsPropertyKey(P) is true.
+	  * 2. Let func be GetV(O, P).
+	  * 3. ReturnIfAbrupt(func).
+	  * 4. If func is either undefined or null, return undefined.
+	  * 5. If IsCallable(func) is false, throw a TypeError exception.
+	  * 6. Return func.
+	  */
+		GetMethod: function GetMethod(O, P) {
+			// 7.3.9.1
+			if (!this.IsPropertyKey(P)) {
+				throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+			}
+	
+			// 7.3.9.2
+			var func = this.GetV(O, P);
+	
+			// 7.3.9.4
+			if (func == null) {
+				return undefined;
+			}
+	
+			// 7.3.9.5
+			if (!this.IsCallable(func)) {
+				throw new TypeError(P + 'is not a function');
+			}
+	
+			// 7.3.9.6
+			return func;
+		},
+	
+		/**
+	  * 7.3.1 Get (O, P) - http://www.ecma-international.org/ecma-262/6.0/#sec-get-o-p
+	  * 1. Assert: Type(O) is Object.
+	  * 2. Assert: IsPropertyKey(P) is true.
+	  * 3. Return O.[[Get]](P, O).
+	  */
+		Get: function Get(O, P) {
+			// 7.3.1.1
+			if (this.Type(O) !== 'Object') {
+				throw new TypeError('Assertion failed: Type(O) is not Object');
+			}
+			// 7.3.1.2
+			if (!this.IsPropertyKey(P)) {
+				throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+			}
+			// 7.3.1.3
+			return O[P];
 		},
 	
 		Type: function Type(x) {
@@ -1217,19 +1288,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 23 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 	
+	var has = __webpack_require__(24);
 	var regexExec = RegExp.prototype.exec;
-	var tryRegexExec = function tryRegexExec(value) {
+	var gOPD = Object.getOwnPropertyDescriptor;
+	
+	var tryRegexExecCall = function tryRegexExec(value) {
 		try {
+			var lastIndex = value.lastIndex;
+			value.lastIndex = 0;
+	
 			regexExec.call(value);
 			return true;
 		} catch (e) {
 			return false;
+		} finally {
+			value.lastIndex = lastIndex;
 		}
 	};
 	var toStr = Object.prototype.toString;
@@ -1237,14 +1316,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	var hasToStringTag = typeof Symbol === 'function' && _typeof(Symbol.toStringTag) === 'symbol';
 	
 	module.exports = function isRegex(value) {
-		if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== 'object') {
+		if (!value || (typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== 'object') {
 			return false;
 		}
-		return hasToStringTag ? tryRegexExec(value) : toStr.call(value) === regexClass;
+		if (!hasToStringTag) {
+			return toStr.call(value) === regexClass;
+		}
+	
+		var descriptor = gOPD(value, 'lastIndex');
+		var hasLastIndexDataProperty = descriptor && has(descriptor, 'value');
+		if (!hasLastIndexDataProperty) {
+			return false;
+		}
+	
+		return tryRegexExecCall(value);
 	};
 
 /***/ },
 /* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var bind = __webpack_require__(19);
+	
+	module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
+
+/***/ },
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1272,13 +1371,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var define = __webpack_require__(2);
-	var getPolyfill = __webpack_require__(24);
+	var getPolyfill = __webpack_require__(25);
 	
 	module.exports = function shimArrayFrom() {
 		var polyfill = getPolyfill();
@@ -1293,16 +1392,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var defineProperties = __webpack_require__(2);
 	
-	var implementation = __webpack_require__(27);
-	var getPolyfill = __webpack_require__(29);
-	var shim = __webpack_require__(30);
+	var implementation = __webpack_require__(28);
+	var getPolyfill = __webpack_require__(30);
+	var shim = __webpack_require__(31);
 	
 	var polyfill = getPolyfill();
 	
@@ -1315,7 +1414,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = polyfill;
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1327,7 +1426,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var canBeObject = function canBeObject(obj) {
 		return typeof obj !== 'undefined' && obj !== null;
 	};
-	var hasSymbols = __webpack_require__(28)();
+	var hasSymbols = __webpack_require__(29)();
 	var toObject = Object;
 	var push = bind.call(Function.call, Array.prototype.push);
 	var propIsEnumerable = bind.call(Function.call, Object.prototype.propertyIsEnumerable);
@@ -1364,7 +1463,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1436,12 +1535,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var implementation = __webpack_require__(27);
+	var implementation = __webpack_require__(28);
 	
 	var lacksProperEnumerationOrder = function lacksProperEnumerationOrder() {
 		if (!Object.assign) {
@@ -1492,13 +1591,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var define = __webpack_require__(2);
-	var getPolyfill = __webpack_require__(29);
+	var getPolyfill = __webpack_require__(30);
 	
 	module.exports = function shimAssign() {
 		var polyfill = getPolyfill();
@@ -1509,7 +1608,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var require;var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process, global) {'use strict';
@@ -1651,7 +1750,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function attemptVertx() {
 	    try {
 	      var r = require;
-	      var vertx = __webpack_require__(33);
+	      var vertx = __webpack_require__(34);
 	      vertxNext = vertx.runOnLoop || vertx.runOnContext;
 	      return useVertxTimer();
 	    } catch (e) {
@@ -2671,10 +2770,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return Promise;
 	});
 	//# sourceMappingURL=es6-promise.map
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(32), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(33), (function() { return this; }())))
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2860,21 +2959,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports) {
 
 	"use strict";
 	
-	window.customElements && eval("/**\n * @license\n * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.\n * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt\n * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt\n * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt\n * Code distributed by Google as part of the polymer project is also\n * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt\n */\n\n/**\n * This shim allows elements written in, or compiled to, ES5 to work on native\n * implementations of Custom Elements.\n *\n * ES5-style classes don't work with native Custom Elements because the\n * HTMLElement constructor uses the value of `new.target` to look up the custom\n * element definition for the currently called constructor. `new.target` is only\n * set when `new` is called and is only propagated via super() calls. super()\n * is not emulatable in ES5. The pattern of `SuperClass.call(this)`` only works\n * when extending other ES5-style classes, and does not propagate `new.target`.\n *\n * This shim allows the native HTMLElement constructor to work by generating and\n * registering a stand-in class instead of the users custom element class. This\n * stand-in class's constructor has an actual call to super().\n * `customElements.define()` and `customElements.get()` are both overridden to\n * hide this stand-in class from users.\n *\n * In order to create instance of the user-defined class, rather than the stand\n * in, the stand-in's constructor swizzles its instances prototype and invokes\n * the user-defined constructor. When the user-defined constructor is called\n * directly it creates an instance of the stand-in class to get a real extension\n * of HTMLElement and returns that.\n *\n * There are two important constructors: A patched HTMLElement constructor, and\n * the StandInElement constructor. They both will be called to create an element\n * but which is called first depends on whether the browser creates the element\n * or the user-defined constructor is called directly. The variables\n * `browserConstruction` and `userConstruction` control the flow between the\n * two constructors.\n *\n * This shim should be better than forcing the polyfill because:\n *   1. It's smaller\n *   2. All reaction timings are the same as native (mostly synchronous)\n *   3. All reaction triggering DOM operations are automatically supported\n *\n * There are some restrictions and requirements on ES5 constructors:\n *   1. All constructors in a inheritance hierarchy must be ES5-style, so that\n *      they can be called with Function.call(). This effectively means that the\n *      whole application must be compiled to ES5.\n *   2. Constructors must return the value of the emulated super() call. Like\n *      `return SuperClass.call(this)`\n *   3. The `this` reference should not be used before the emulated super() call\n *      just like `this` is illegal to use before super() in ES6.\n *   4. Constructors should not create other custom elements before the emulated\n *      super() call. This is the same restriction as with native custom\n *      elements.\n *\n *  Compiling valid class-based custom elements to ES5 will satisfy these\n *  requirements with the latest version of popular transpilers.\n */\n(() => {\n  'use strict';\n\n  // Do nothing if `customElements` does not exist.\n  if (!window.customElements) return;\n\n  const NativeHTMLElement = window.HTMLElement;\n  const nativeDefine = window.customElements.define;\n  const nativeGet = window.customElements.get;\n\n  /**\n   * Map of user-provided constructors to tag names.\n   *\n   * @type {Map<Function, string>}\n   */\n  const tagnameByConstructor = new Map();\n\n  /**\n   * Map of tag names to user-provided constructors.\n   *\n   * @type {Map<string, Function>}\n   */\n  const constructorByTagname = new Map();\n\n\n  /**\n   * Whether the constructors are being called by a browser process, ie parsing\n   * or createElement.\n   */\n  let browserConstruction = false;\n\n  /**\n   * Whether the constructors are being called by a user-space process, ie\n   * calling an element constructor.\n   */\n  let userConstruction = false;\n\n  window.HTMLElement = function() {\n    if (!browserConstruction) {\n      const tagname = tagnameByConstructor.get(this.constructor);\n      const fakeClass = nativeGet.call(window.customElements, tagname);\n\n      // Make sure that the fake constructor doesn't call back to this constructor\n      userConstruction = true;\n      const instance = new (fakeClass)();\n      return instance;\n    }\n    // Else do nothing. This will be reached by ES5-style classes doing\n    // HTMLElement.call() during initialization\n    browserConstruction = false;\n  };\n  // By setting the patched HTMLElement's prototype property to the native\n  // HTMLElement's prototype we make sure that:\n  //     document.createElement('a') instanceof HTMLElement\n  // works because instanceof uses HTMLElement.prototype, which is on the\n  // ptototype chain of built-in elements.\n  window.HTMLElement.prototype = NativeHTMLElement.prototype;\n\n  window.customElements.define = (tagname, elementClass) => {\n    const elementProto = elementClass.prototype;\n    const StandInElement = class extends NativeHTMLElement {\n      constructor() {\n        // Call the native HTMLElement constructor, this gives us the\n        // under-construction instance as `this`:\n        super();\n\n        // The prototype will be wrong up because the browser used our fake\n        // class, so fix it:\n        Object.setPrototypeOf(this, elementProto);\n\n        if (!userConstruction) {\n          // Make sure that user-defined constructor bottom's out to a do-nothing\n          // HTMLElement() call\n          browserConstruction = true;\n          // Call the user-defined constructor on our instance:\n          elementClass.call(this);\n        }\n        userConstruction = false;\n      }\n    };\n    const standInProto = StandInElement.prototype;\n    StandInElement.observedAttributes = elementClass.observedAttributes;\n    standInProto.connectedCallback = elementProto.connectedCallback;\n    standInProto.disconnectedCallback = elementProto.disconnectedCallback;\n    standInProto.attributeChangedCallback = elementProto.attributeChangedCallback;\n    standInProto.adoptedCallback = elementProto.adoptedCallback;\n\n    tagnameByConstructor.set(elementClass, tagname);\n    constructorByTagname.set(tagname, elementClass);\n    nativeDefine.call(window.customElements, tagname, StandInElement);\n  };\n\n  window.customElements.get = (tagname) => constructorByTagname.get(tagname);\n\n})();");
+	window.customElements && eval("/**\n * @license\n * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.\n * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt\n * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt\n * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt\n * Code distributed by Google as part of the polymer project is also\n * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt\n */\n\n/**\n * This shim allows elements written in, or compiled to, ES5 to work on native\n * implementations of Custom Elements.\n *\n * ES5-style classes don't work with native Custom Elements because the\n * HTMLElement constructor uses the value of `new.target` to look up the custom\n * element definition for the currently called constructor. `new.target` is only\n * set when `new` is called and is only propagated via super() calls. super()\n * is not emulatable in ES5. The pattern of `SuperClass.call(this)`` only works\n * when extending other ES5-style classes, and does not propagate `new.target`.\n *\n * This shim allows the native HTMLElement constructor to work by generating and\n * registering a stand-in class instead of the users custom element class. This\n * stand-in class's constructor has an actual call to super().\n * `customElements.define()` and `customElements.get()` are both overridden to\n * hide this stand-in class from users.\n *\n * In order to create instance of the user-defined class, rather than the stand\n * in, the stand-in's constructor swizzles its instances prototype and invokes\n * the user-defined constructor. When the user-defined constructor is called\n * directly it creates an instance of the stand-in class to get a real extension\n * of HTMLElement and returns that.\n *\n * There are two important constructors: A patched HTMLElement constructor, and\n * the StandInElement constructor. They both will be called to create an element\n * but which is called first depends on whether the browser creates the element\n * or the user-defined constructor is called directly. The variables\n * `browserConstruction` and `userConstruction` control the flow between the\n * two constructors.\n *\n * This shim should be better than forcing the polyfill because:\n *   1. It's smaller\n *   2. All reaction timings are the same as native (mostly synchronous)\n *   3. All reaction triggering DOM operations are automatically supported\n *\n * There are some restrictions and requirements on ES5 constructors:\n *   1. All constructors in a inheritance hierarchy must be ES5-style, so that\n *      they can be called with Function.call(). This effectively means that the\n *      whole application must be compiled to ES5.\n *   2. Constructors must return the value of the emulated super() call. Like\n *      `return SuperClass.call(this)`\n *   3. The `this` reference should not be used before the emulated super() call\n *      just like `this` is illegal to use before super() in ES6.\n *   4. Constructors should not create other custom elements before the emulated\n *      super() call. This is the same restriction as with native custom\n *      elements.\n *\n *  Compiling valid class-based custom elements to ES5 will satisfy these\n *  requirements with the latest version of popular transpilers.\n */\n(() => {\n  'use strict';\n\n  // Do nothing if `customElements` does not exist.\n  if (!window.customElements) return;\n\n  const NativeHTMLElement = window.HTMLElement;\n  const nativeDefine = window.customElements.define;\n  const nativeGet = window.customElements.get;\n\n  /**\n   * Map of user-provided constructors to tag names.\n   *\n   * @type {Map<Function, string>}\n   */\n  const tagnameByConstructor = new Map();\n\n  /**\n   * Map of tag names to user-provided constructors.\n   *\n   * @type {Map<string, Function>}\n   */\n  const constructorByTagname = new Map();\n\n\n  /**\n   * Whether the constructors are being called by a browser process, ie parsing\n   * or createElement.\n   */\n  let browserConstruction = false;\n\n  /**\n   * Whether the constructors are being called by a user-space process, ie\n   * calling an element constructor.\n   */\n  let userConstruction = false;\n\n  window.HTMLElement = function() {\n    if (!browserConstruction) {\n      const tagname = tagnameByConstructor.get(this.constructor);\n      const fakeClass = nativeGet.call(window.customElements, tagname);\n\n      // Make sure that the fake constructor doesn't call back to this constructor\n      userConstruction = true;\n      const instance = new (fakeClass)();\n      return instance;\n    }\n    // Else do nothing. This will be reached by ES5-style classes doing\n    // HTMLElement.call() during initialization\n    browserConstruction = false;\n  };\n  // By setting the patched HTMLElement's prototype property to the native\n  // HTMLElement's prototype we make sure that:\n  //     document.createElement('a') instanceof HTMLElement\n  // works because instanceof uses HTMLElement.prototype, which is on the\n  // ptototype chain of built-in elements.\n  window.HTMLElement.prototype = NativeHTMLElement.prototype;\n\n  window.customElements.define = (tagname, elementClass) => {\n    const elementProto = elementClass.prototype;\n    const StandInElement = class extends NativeHTMLElement {\n      constructor() {\n        // Call the native HTMLElement constructor, this gives us the\n        // under-construction instance as `this`:\n        super();\n\n        // The prototype will be wrong up because the browser used our fake\n        // class, so fix it:\n        Object.setPrototypeOf(this, elementProto);\n\n        if (!userConstruction) {\n          // Make sure that user-defined constructor bottom's out to a do-nothing\n          // HTMLElement() call\n          browserConstruction = true;\n          // Call the user-defined constructor on our instance:\n          elementClass.call(this);\n        }\n        userConstruction = false;\n      }\n    };\n    const standInProto = StandInElement.prototype;\n    StandInElement.observedAttributes = elementClass.observedAttributes;\n    standInProto.connectedCallback = elementProto.connectedCallback;\n    standInProto.disconnectedCallback = elementProto.disconnectedCallback;\n    standInProto.attributeChangedCallback = elementProto.attributeChangedCallback;\n    standInProto.adoptedCallback = elementProto.adoptedCallback;\n\n    tagnameByConstructor.set(elementClass, tagname);\n    constructorByTagname.set(tagname, elementClass);\n    nativeDefine.call(window.customElements, tagname, StandInElement);\n  };\n\n  window.customElements.get = (tagname) => constructorByTagname.get(tagname);\n\n})();\n");
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2943,142 +3042,131 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var PolyfilledHTMLTemplateElement = function PolyfilledHTMLTemplateElement() {};
 	
 	  if (needsTemplate) {
-	    var contentDoc;
-	    var canDecorate;
-	    var templateStyle;
-	    var head;
-	    var canProtoPatch;
-	    var escapeDataRegExp;
+	    var defineInnerHTML = function defineInnerHTML(obj) {
+	      Object.defineProperty(obj, 'innerHTML', {
+	        get: function get() {
+	          var o = '';
+	          for (var e = this.content.firstChild; e; e = e.nextSibling) {
+	            o += e.outerHTML || escapeData(e.data);
+	          }
+	          return o;
+	        },
+	        set: function set(text) {
+	          contentDoc.body.innerHTML = text;
+	          PolyfilledHTMLTemplateElement.bootstrap(contentDoc);
+	          while (this.content.firstChild) {
+	            this.content.removeChild(this.content.firstChild);
+	          }
+	          while (contentDoc.body.firstChild) {
+	            this.content.appendChild(contentDoc.body.firstChild);
+	          }
+	        },
+	        configurable: true
+	      });
+	    };
 	
-	    (function () {
-	      var defineInnerHTML = function defineInnerHTML(obj) {
-	        Object.defineProperty(obj, 'innerHTML', {
-	          get: function get() {
-	            var o = '';
-	            for (var e = this.content.firstChild; e; e = e.nextSibling) {
-	              o += e.outerHTML || escapeData(e.data);
-	            }
-	            return o;
-	          },
-	          set: function set(text) {
-	            contentDoc.body.innerHTML = text;
-	            PolyfilledHTMLTemplateElement.bootstrap(contentDoc);
-	            while (this.content.firstChild) {
-	              this.content.removeChild(this.content.firstChild);
-	            }
-	            while (contentDoc.body.firstChild) {
-	              this.content.appendChild(contentDoc.body.firstChild);
-	            }
-	          },
-	          configurable: true
-	        });
-	      };
+	    var escapeReplace = function escapeReplace(c) {
+	      switch (c) {
+	        case '&':
+	          return '&amp;';
+	        case '<':
+	          return '&lt;';
+	        case '>':
+	          return '&gt;';
+	        case '\xA0':
+	          return '&nbsp;';
+	      }
+	    };
 	
-	      var escapeReplace = function escapeReplace(c) {
-	        switch (c) {
-	          case '&':
-	            return '&amp;';
-	          case '<':
-	            return '&lt;';
-	          case '>':
-	            return '&gt;';
-	          case '\xA0':
-	            return '&nbsp;';
-	        }
-	      };
+	    var escapeData = function escapeData(s) {
+	      return s.replace(escapeDataRegExp, escapeReplace);
+	    };
 	
-	      var escapeData = function escapeData(s) {
-	        return s.replace(escapeDataRegExp, escapeReplace);
-	      };
+	    var contentDoc = document.implementation.createHTMLDocument('template');
+	    var canDecorate = true;
 	
-	      contentDoc = document.implementation.createHTMLDocument('template');
-	      canDecorate = true;
-	      templateStyle = document.createElement('style');
+	    var templateStyle = document.createElement('style');
+	    templateStyle.textContent = TEMPLATE_TAG + '{display:none;}';
 	
-	      templateStyle.textContent = TEMPLATE_TAG + '{display:none;}';
+	    var head = document.head;
+	    head.insertBefore(templateStyle, head.firstElementChild);
 	
-	      head = document.head;
+	    /**
+	      Provides a minimal shim for the <template> element.
+	    */
+	    PolyfilledHTMLTemplateElement.prototype = Object.create(HTMLElement.prototype);
 	
-	      head.insertBefore(templateStyle, head.firstElementChild);
+	    // if elements do not have `innerHTML` on instances, then
+	    // templates can be patched by swizzling their prototypes.
+	    var canProtoPatch = !document.createElement('div').hasOwnProperty('innerHTML');
 	
-	      /**
-	        Provides a minimal shim for the <template> element.
-	      */
-	      PolyfilledHTMLTemplateElement.prototype = Object.create(HTMLElement.prototype);
-	
-	      // if elements do not have `innerHTML` on instances, then
-	      // templates can be patched by swizzling their prototypes.
-	      canProtoPatch = !document.createElement('div').hasOwnProperty('innerHTML');
-	
-	      /**
-	        The `decorate` method moves element children to the template's `content`.
-	        NOTE: there is no support for dynamically adding elements to templates.
-	      */
-	
-	      PolyfilledHTMLTemplateElement.decorate = function (template) {
-	        // if the template is decorated, return fast
-	        if (template.content) {
-	          return;
-	        }
-	        template.content = contentDoc.createDocumentFragment();
-	        var child;
-	        while (child = template.firstChild) {
-	          template.content.appendChild(child);
-	        }
-	        // NOTE: prefer prototype patching for performance and
-	        // because on some browsers (IE11), re-defining `innerHTML`
-	        // can result in intermittent errors.
-	        if (canProtoPatch) {
-	          template.__proto__ = PolyfilledHTMLTemplateElement.prototype;
-	        } else {
-	          template.cloneNode = function (deep) {
-	            return PolyfilledHTMLTemplateElement._cloneNode(this, deep);
-	          };
-	          // add innerHTML to template, if possible
-	          // Note: this throws on Safari 7
-	          if (canDecorate) {
-	            try {
-	              defineInnerHTML(template);
-	            } catch (err) {
-	              canDecorate = false;
-	            }
+	    /**
+	      The `decorate` method moves element children to the template's `content`.
+	      NOTE: there is no support for dynamically adding elements to templates.
+	    */
+	    PolyfilledHTMLTemplateElement.decorate = function (template) {
+	      // if the template is decorated, return fast
+	      if (template.content) {
+	        return;
+	      }
+	      template.content = contentDoc.createDocumentFragment();
+	      var child;
+	      while (child = template.firstChild) {
+	        template.content.appendChild(child);
+	      }
+	      // NOTE: prefer prototype patching for performance and
+	      // because on some browsers (IE11), re-defining `innerHTML`
+	      // can result in intermittent errors.
+	      if (canProtoPatch) {
+	        template.__proto__ = PolyfilledHTMLTemplateElement.prototype;
+	      } else {
+	        template.cloneNode = function (deep) {
+	          return PolyfilledHTMLTemplateElement._cloneNode(this, deep);
+	        };
+	        // add innerHTML to template, if possible
+	        // Note: this throws on Safari 7
+	        if (canDecorate) {
+	          try {
+	            defineInnerHTML(template);
+	          } catch (err) {
+	            canDecorate = false;
 	          }
 	        }
-	        // bootstrap recursively
-	        PolyfilledHTMLTemplateElement.bootstrap(template.content);
-	      };
+	      }
+	      // bootstrap recursively
+	      PolyfilledHTMLTemplateElement.bootstrap(template.content);
+	    };
 	
-	      defineInnerHTML(PolyfilledHTMLTemplateElement.prototype);
+	    defineInnerHTML(PolyfilledHTMLTemplateElement.prototype);
 	
-	      /**
-	        The `bootstrap` method is called automatically and "fixes" all
-	        <template> elements in the document referenced by the `doc` argument.
-	      */
-	      PolyfilledHTMLTemplateElement.bootstrap = function (doc) {
-	        var templates = doc.querySelectorAll(TEMPLATE_TAG);
-	        for (var i = 0, l = templates.length, t; i < l && (t = templates[i]); i++) {
-	          PolyfilledHTMLTemplateElement.decorate(t);
-	        }
-	      };
+	    /**
+	      The `bootstrap` method is called automatically and "fixes" all
+	      <template> elements in the document referenced by the `doc` argument.
+	    */
+	    PolyfilledHTMLTemplateElement.bootstrap = function (doc) {
+	      var templates = doc.querySelectorAll(TEMPLATE_TAG);
+	      for (var i = 0, l = templates.length, t; i < l && (t = templates[i]); i++) {
+	        PolyfilledHTMLTemplateElement.decorate(t);
+	      }
+	    };
 	
-	      // auto-bootstrapping for main document
-	      document.addEventListener('DOMContentLoaded', function () {
-	        PolyfilledHTMLTemplateElement.bootstrap(document);
-	      });
+	    // auto-bootstrapping for main document
+	    document.addEventListener('DOMContentLoaded', function () {
+	      PolyfilledHTMLTemplateElement.bootstrap(document);
+	    });
 	
-	      // Patch document.createElement to ensure newly created templates have content
-	      Document.prototype.createElement = function () {
-	        'use strict';
+	    // Patch document.createElement to ensure newly created templates have content
+	    Document.prototype.createElement = function () {
+	      'use strict';
 	
-	        var el = Native_createElement.apply(this, arguments);
-	        if (el.localName === 'template') {
-	          PolyfilledHTMLTemplateElement.decorate(el);
-	        }
-	        return el;
-	      };
+	      var el = Native_createElement.apply(this, arguments);
+	      if (el.localName === 'template') {
+	        PolyfilledHTMLTemplateElement.decorate(el);
+	      }
+	      return el;
+	    };
 	
-	      escapeDataRegExp = /[&\u00A0<>]/g;
-	    })();
+	    var escapeDataRegExp = /[&\u00A0<>]/g;
 	  }
 	
 	  // make cloning/importing work!
@@ -3176,32 +3264,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	})();
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _CustomElementRegistry = __webpack_require__(40);
+	var _CustomElementRegistry = __webpack_require__(41);
 	
 	var _CustomElementRegistry2 = _interopRequireDefault(_CustomElementRegistry);
 	
-	var _HTMLElement = __webpack_require__(43);
+	var _HTMLElement = __webpack_require__(44);
 	
 	var _HTMLElement2 = _interopRequireDefault(_HTMLElement);
 	
-	var _Document = __webpack_require__(46);
+	var _Document = __webpack_require__(47);
 	
 	var _Document2 = _interopRequireDefault(_Document);
 	
-	var _Node = __webpack_require__(48);
+	var _Node = __webpack_require__(49);
 	
 	var _Node2 = _interopRequireDefault(_Node);
 	
-	var _Element = __webpack_require__(49);
+	var _Element = __webpack_require__(50);
 	
 	var _Element2 = _interopRequireDefault(_Element);
 	
@@ -3242,7 +3330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3253,11 +3341,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _Utilities = __webpack_require__(38);
+	var _Utilities = __webpack_require__(39);
 	
 	var Utilities = _interopRequireWildcard(_Utilities);
 	
-	var _CustomElementState = __webpack_require__(39);
+	var _CustomElementState = __webpack_require__(40);
 	
 	var _CustomElementState2 = _interopRequireDefault(_CustomElementState);
 	
@@ -3635,7 +3723,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = CustomElementInternals;
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3771,7 +3859,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 39 */
+/* 40 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -3790,7 +3878,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = CustomElementState;
 
 /***/ },
-/* 40 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3801,19 +3889,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _DocumentConstructionObserver = __webpack_require__(41);
+	var _DocumentConstructionObserver = __webpack_require__(42);
 	
 	var _DocumentConstructionObserver2 = _interopRequireDefault(_DocumentConstructionObserver);
 	
-	var _Deferred = __webpack_require__(42);
+	var _Deferred = __webpack_require__(43);
 	
 	var _Deferred2 = _interopRequireDefault(_Deferred);
 	
-	var _Utilities = __webpack_require__(38);
+	var _Utilities = __webpack_require__(39);
 	
 	var Utilities = _interopRequireWildcard(_Utilities);
 	
@@ -3914,27 +4002,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var attributeChangedCallback = void 0;
 	      var observedAttributes = void 0;
 	      try {
-	        (function () {
-	          var getCallback = function getCallback(name) {
-	            var callbackValue = prototype[name];
-	            if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
-	              throw new Error('The \'' + name + '\' callback must be a function.');
-	            }
-	            return callbackValue;
-	          };
-	
-	          /** @type {!Object} */
-	          var prototype = constructor.prototype;
-	          if (!(prototype instanceof Object)) {
-	            throw new TypeError('The custom element constructor\'s prototype is not an object.');
+	        var getCallback = function getCallback(name) {
+	          var callbackValue = prototype[name];
+	          if (callbackValue !== undefined && !(callbackValue instanceof Function)) {
+	            throw new Error('The \'' + name + '\' callback must be a function.');
 	          }
+	          return callbackValue;
+	        };
 	
-	          connectedCallback = getCallback('connectedCallback');
-	          disconnectedCallback = getCallback('disconnectedCallback');
-	          adoptedCallback = getCallback('adoptedCallback');
-	          attributeChangedCallback = getCallback('attributeChangedCallback');
-	          observedAttributes = constructor['observedAttributes'] || [];
-	        })();
+	        /** @type {!Object} */
+	        var prototype = constructor.prototype;
+	        if (!(prototype instanceof Object)) {
+	          throw new TypeError('The custom element constructor\'s prototype is not an object.');
+	        }
+	
+	        connectedCallback = getCallback('connectedCallback');
+	        disconnectedCallback = getCallback('disconnectedCallback');
+	        adoptedCallback = getCallback('adoptedCallback');
+	        attributeChangedCallback = getCallback('attributeChangedCallback');
+	        observedAttributes = constructor['observedAttributes'] || [];
 	      } catch (e) {
 	        return;
 	      } finally {
@@ -4058,7 +4144,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	CustomElementRegistry.prototype['polyfillWrapFlushCallback'] = CustomElementRegistry.prototype.polyfillWrapFlushCallback;
 
 /***/ },
-/* 41 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4069,7 +4155,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
@@ -4153,7 +4239,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = DocumentConstructionObserver;
 
 /***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -4236,7 +4322,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = Deferred;
 
 /***/ },
-/* 43 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4292,19 +4378,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }();
 	};
 	
-	var _Native = __webpack_require__(44);
+	var _Native = __webpack_require__(45);
 	
 	var _Native2 = _interopRequireDefault(_Native);
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _CustomElementState = __webpack_require__(39);
+	var _CustomElementState = __webpack_require__(40);
 	
 	var _CustomElementState2 = _interopRequireDefault(_CustomElementState);
 	
-	var _AlreadyConstructedMarker = __webpack_require__(45);
+	var _AlreadyConstructedMarker = __webpack_require__(46);
 	
 	var _AlreadyConstructedMarker2 = _interopRequireDefault(_AlreadyConstructedMarker);
 	
@@ -4317,7 +4403,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 /***/ },
-/* 44 */
+/* 45 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -4358,7 +4444,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 45 */
+/* 46 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -4383,7 +4469,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = new AlreadyConstructedMarker();
 
 /***/ },
-/* 46 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4462,19 +4548,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	};
 	
-	var _Native = __webpack_require__(44);
+	var _Native = __webpack_require__(45);
 	
 	var _Native2 = _interopRequireDefault(_Native);
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _Utilities = __webpack_require__(38);
+	var _Utilities = __webpack_require__(39);
 	
 	var Utilities = _interopRequireWildcard(_Utilities);
 	
-	var _ParentNode = __webpack_require__(47);
+	var _ParentNode = __webpack_require__(48);
 	
 	var _ParentNode2 = _interopRequireDefault(_ParentNode);
 	
@@ -4489,7 +4575,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 /***/ },
-/* 47 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4560,11 +4646,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	};
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _Utilities = __webpack_require__(38);
+	var _Utilities = __webpack_require__(39);
 	
 	var Utilities = _interopRequireWildcard(_Utilities);
 	
@@ -4588,7 +4674,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	;
 
 /***/ },
-/* 48 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4825,15 +4911,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	};
 	
-	var _Native = __webpack_require__(44);
+	var _Native = __webpack_require__(45);
 	
 	var _Native2 = _interopRequireDefault(_Native);
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _Utilities = __webpack_require__(38);
+	var _Utilities = __webpack_require__(39);
 	
 	var Utilities = _interopRequireWildcard(_Utilities);
 	
@@ -4848,7 +4934,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 /***/ },
-/* 49 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4928,42 +5014,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else if (_Native2.default.HTMLElement_innerHTML && _Native2.default.HTMLElement_innerHTML.get) {
 	    patch_innerHTML(HTMLElement.prototype, _Native2.default.HTMLElement_innerHTML);
 	  } else {
-	    (function () {
 	
-	      /** @type {HTMLDivElement} */
-	      var rawDiv = _Native2.default.Document_createElement.call(document, 'div');
+	    /** @type {HTMLDivElement} */
+	    var rawDiv = _Native2.default.Document_createElement.call(document, 'div');
 	
-	      internals.addPatch(function (element) {
-	        patch_innerHTML(element, {
-	          enumerable: true,
-	          configurable: true,
-	          // Implements getting `innerHTML` by performing an unpatched `cloneNode`
-	          // of the element and returning the resulting element's `innerHTML`.
-	          // TODO: Is this too expensive?
-	          get: /** @this {Element} */function get() {
-	            return _Native2.default.Node_cloneNode.call(this, true).innerHTML;
-	          },
-	          // Implements setting `innerHTML` by creating an unpatched element,
-	          // setting `innerHTML` of that element and replacing the target
-	          // element's children with those of the unpatched element.
-	          set: /** @this {Element} */function set(assignedValue) {
-	            // NOTE: re-route to `content` for `template` elements.
-	            // We need to do this because `template.appendChild` does not
-	            // route into `template.content`.
-	            /** @type {!Node} */
-	            var content = this.localName === 'template' ? /** @type {!HTMLTemplateElement} */this.content : this;
-	            rawDiv.innerHTML = assignedValue;
+	    internals.addPatch(function (element) {
+	      patch_innerHTML(element, {
+	        enumerable: true,
+	        configurable: true,
+	        // Implements getting `innerHTML` by performing an unpatched `cloneNode`
+	        // of the element and returning the resulting element's `innerHTML`.
+	        // TODO: Is this too expensive?
+	        get: /** @this {Element} */function get() {
+	          return _Native2.default.Node_cloneNode.call(this, true).innerHTML;
+	        },
+	        // Implements setting `innerHTML` by creating an unpatched element,
+	        // setting `innerHTML` of that element and replacing the target
+	        // element's children with those of the unpatched element.
+	        set: /** @this {Element} */function set(assignedValue) {
+	          // NOTE: re-route to `content` for `template` elements.
+	          // We need to do this because `template.appendChild` does not
+	          // route into `template.content`.
+	          /** @type {!Node} */
+	          var content = this.localName === 'template' ? /** @type {!HTMLTemplateElement} */this.content : this;
+	          rawDiv.innerHTML = assignedValue;
 	
-	            while (content.childNodes.length > 0) {
-	              _Native2.default.Node_removeChild.call(content, content.childNodes[0]);
-	            }
-	            while (rawDiv.childNodes.length > 0) {
-	              _Native2.default.Node_appendChild.call(content, rawDiv.childNodes[0]);
-	            }
+	          while (content.childNodes.length > 0) {
+	            _Native2.default.Node_removeChild.call(content, content.childNodes[0]);
 	          }
-	        });
+	          while (rawDiv.childNodes.length > 0) {
+	            _Native2.default.Node_appendChild.call(content, rawDiv.childNodes[0]);
+	          }
+	        }
 	      });
-	    })();
+	    });
 	  }
 	
 	  Utilities.setPropertyUnchecked(Element.prototype, 'setAttribute',
@@ -5093,27 +5177,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	};
 	
-	var _Native = __webpack_require__(44);
+	var _Native = __webpack_require__(45);
 	
 	var _Native2 = _interopRequireDefault(_Native);
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _CustomElementState = __webpack_require__(39);
+	var _CustomElementState = __webpack_require__(40);
 	
 	var _CustomElementState2 = _interopRequireDefault(_CustomElementState);
 	
-	var _Utilities = __webpack_require__(38);
+	var _Utilities = __webpack_require__(39);
 	
 	var Utilities = _interopRequireWildcard(_Utilities);
 	
-	var _ParentNode = __webpack_require__(47);
+	var _ParentNode = __webpack_require__(48);
 	
 	var _ParentNode2 = _interopRequireDefault(_ParentNode);
 	
-	var _ChildNode = __webpack_require__(50);
+	var _ChildNode = __webpack_require__(51);
 	
 	var _ChildNode2 = _interopRequireDefault(_ChildNode);
 	
@@ -5128,7 +5212,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 /***/ },
-/* 50 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5242,11 +5326,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	};
 	
-	var _CustomElementInternals = __webpack_require__(37);
+	var _CustomElementInternals = __webpack_require__(38);
 	
 	var _CustomElementInternals2 = _interopRequireDefault(_CustomElementInternals);
 	
-	var _Utilities = __webpack_require__(38);
+	var _Utilities = __webpack_require__(39);
 	
 	var Utilities = _interopRequireWildcard(_Utilities);
 	
@@ -5272,7 +5356,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	;
 
 /***/ },
-/* 51 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5297,27 +5381,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	'use strict';
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _flush = __webpack_require__(53);
+	var _flush = __webpack_require__(54);
 	
-	var _observeChanges = __webpack_require__(54);
+	var _observeChanges = __webpack_require__(55);
 	
-	var _nativeMethods = __webpack_require__(55);
+	var _nativeMethods = __webpack_require__(56);
 	
 	var nativeMethods = _interopRequireWildcard(_nativeMethods);
 	
-	var _nativeTree = __webpack_require__(56);
+	var _nativeTree = __webpack_require__(57);
 	
 	var nativeTree = _interopRequireWildcard(_nativeTree);
 	
-	var _patchBuiltins = __webpack_require__(58);
+	var _patchBuiltins = __webpack_require__(59);
 	
-	var _patchEvents = __webpack_require__(63);
+	var _patchEvents = __webpack_require__(64);
 	
-	var _attachShadow = __webpack_require__(64);
+	var _attachShadow = __webpack_require__(65);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -5350,7 +5434,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 52 */
+/* 53 */
 /***/ function(module, exports) {
 
 	/**
@@ -5473,7 +5557,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 53 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5494,7 +5578,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.enqueue = enqueue;
 	exports.flush = flush;
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
@@ -5523,7 +5607,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	flush.list = flushList;
 
 /***/ },
-/* 54 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5547,7 +5631,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	exports.filterMutations = filterMutations;
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
@@ -5580,18 +5664,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'flush',
 	    value: function flush() {
-	      var _this2 = this;
-	
 	      if (this._scheduled) {
-	        (function () {
-	          _this2._scheduled = false;
-	          var mutations = _this2.takeRecords();
-	          if (mutations.length) {
-	            _this2.callbacks.forEach(function (cb) {
-	              cb(mutations);
-	            });
-	          }
-	        })();
+	        this._scheduled = false;
+	        var mutations = this.takeRecords();
+	        if (mutations.length) {
+	          this.callbacks.forEach(function (cb) {
+	            cb(mutations);
+	          });
+	        }
 	      }
 	    }
 	  }, {
@@ -5672,7 +5752,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 55 */
+/* 56 */
 /***/ function(module, exports) {
 
 	/**
@@ -5701,7 +5781,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var removeEventListener = exports.removeEventListener = Element.prototype.removeEventListener;
 
 /***/ },
-/* 56 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5734,7 +5814,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.innerHTML = innerHTML;
 	exports.textContent = textContent;
 	
-	var _innerHTML = __webpack_require__(57);
+	var _innerHTML = __webpack_require__(58);
 	
 	var nodeWalker = document.createTreeWalker(document, NodeFilter.SHOW_ALL, null, false);
 	
@@ -5837,7 +5917,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 57 */
+/* 58 */
 /***/ function(module, exports) {
 
 	/**
@@ -5952,7 +6032,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 58 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5972,21 +6052,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.patchBuiltins = patchBuiltins;
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _logicalMutation = __webpack_require__(59);
+	var _logicalMutation = __webpack_require__(60);
 	
 	var mutation = _interopRequireWildcard(_logicalMutation);
 	
-	var _patchAccessors = __webpack_require__(62);
+	var _patchAccessors = __webpack_require__(63);
 	
-	var _logicalProperties = __webpack_require__(60);
+	var _logicalProperties = __webpack_require__(61);
 	
-	var _patchEvents = __webpack_require__(63);
+	var _patchEvents = __webpack_require__(64);
 	
-	var _attachShadow2 = __webpack_require__(64);
+	var _attachShadow2 = __webpack_require__(65);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -6165,7 +6245,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 59 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -6193,21 +6273,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.cloneNode = cloneNode;
 	exports.importNode = importNode;
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _logicalProperties = __webpack_require__(60);
+	var _logicalProperties = __webpack_require__(61);
 	
-	var _logicalTree = __webpack_require__(61);
+	var _logicalTree = __webpack_require__(62);
 	
 	var logicalTree = _interopRequireWildcard(_logicalTree);
 	
-	var _nativeMethods = __webpack_require__(55);
+	var _nativeMethods = __webpack_require__(56);
 	
 	var nativeMethods = _interopRequireWildcard(_nativeMethods);
 	
-	var _nativeTree = __webpack_require__(56);
+	var _nativeTree = __webpack_require__(57);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -6617,7 +6697,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 60 */
+/* 61 */
 /***/ function(module, exports) {
 
 	/**
@@ -6646,7 +6726,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 61 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -6668,11 +6748,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.recordInsertBefore = recordInsertBefore;
 	exports.recordRemoveChild = recordRemoveChild;
 	
-	var _logicalProperties = __webpack_require__(60);
+	var _logicalProperties = __webpack_require__(61);
 	
-	var _patchAccessors = __webpack_require__(62);
+	var _patchAccessors = __webpack_require__(63);
 	
-	var _nativeTree = __webpack_require__(56);
+	var _nativeTree = __webpack_require__(57);
 	
 	function recordInsertBefore(node, container, ref_node) {
 	  (0, _patchAccessors.patchInsideElementAccessors)(container);
@@ -6778,7 +6858,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 62 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -6800,15 +6880,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.patchAccessors = patchAccessors;
 	exports.patchShadowRootAccessors = patchShadowRootAccessors;
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _innerHTML = __webpack_require__(57);
+	var _innerHTML = __webpack_require__(58);
 	
-	var _logicalProperties = __webpack_require__(60);
+	var _logicalProperties = __webpack_require__(61);
 	
-	var _nativeTree = __webpack_require__(56);
+	var _nativeTree = __webpack_require__(57);
 	
 	var nativeTree = _interopRequireWildcard(_nativeTree);
 	
@@ -6897,7 +6977,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  className: {
 	    get: function get() {
-	      return this.getAttribute('class');
+	      var className = this.getAttribute('class');
+	      return this.getAttribute('class') ? className : '';
 	    },
 	    set: function set(value) {
 	      this.setAttribute('class', value);
@@ -7147,7 +7228,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 63 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7172,11 +7253,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.removeEventListener = removeEventListener;
 	exports.patchEvents = patchEvents;
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _nativeMethods = __webpack_require__(55);
+	var _nativeMethods = __webpack_require__(56);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -7543,7 +7624,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 64 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7564,23 +7645,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.ShadyRoot = undefined;
 	exports.attachShadow = attachShadow;
 	
-	var _arraySplice = __webpack_require__(65);
+	var _arraySplice = __webpack_require__(66);
 	
-	var _utils = __webpack_require__(52);
+	var _utils = __webpack_require__(53);
 	
 	var utils = _interopRequireWildcard(_utils);
 	
-	var _flush = __webpack_require__(53);
+	var _flush = __webpack_require__(54);
 	
-	var _logicalTree = __webpack_require__(61);
+	var _logicalTree = __webpack_require__(62);
 	
-	var _nativeMethods = __webpack_require__(55);
+	var _nativeMethods = __webpack_require__(56);
 	
-	var _nativeTree = __webpack_require__(56);
+	var _nativeTree = __webpack_require__(57);
 	
-	var _patchAccessors = __webpack_require__(62);
+	var _patchAccessors = __webpack_require__(63);
 	
-	var _distributor = __webpack_require__(66);
+	var _distributor = __webpack_require__(67);
 	
 	var _distributor2 = _interopRequireDefault(_distributor);
 	
@@ -7847,7 +7928,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	(0, _patchAccessors.patchShadowRootAccessors)(ShadyRoot.prototype);
 
 /***/ },
-/* 65 */
+/* 66 */
 /***/ function(module, exports) {
 
 	/**
@@ -8091,7 +8172,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 66 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -8112,9 +8193,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _nativeMethods = __webpack_require__(55);
+	var _nativeMethods = __webpack_require__(56);
 	
-	var _nativeTree = __webpack_require__(56);
+	var _nativeTree = __webpack_require__(57);
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
@@ -8341,7 +8422,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = _class;
 
 /***/ },
-/* 67 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -8359,12 +8440,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	Small module to load ShadyCSS and CustomStyle together
 	*/
 	
-	__webpack_require__(68);
+	__webpack_require__(69);
 	
-	__webpack_require__(80);
+	__webpack_require__(81);
 
 /***/ },
-/* 68 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -8384,43 +8465,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	// TODO(dfreedm): consider spliting into separate global
 	
 	
-	var _cssParse = __webpack_require__(69);
+	var _cssParse = __webpack_require__(70);
 	
-	var _styleSettings = __webpack_require__(70);
+	var _styleSettings = __webpack_require__(71);
 	
-	var _styleTransformer = __webpack_require__(71);
+	var _styleTransformer = __webpack_require__(72);
 	
 	var _styleTransformer2 = _interopRequireDefault(_styleTransformer);
 	
-	var _styleUtil = __webpack_require__(72);
+	var _styleUtil = __webpack_require__(73);
 	
 	var StyleUtil = _interopRequireWildcard(_styleUtil);
 	
-	var _styleProperties = __webpack_require__(73);
+	var _styleProperties = __webpack_require__(74);
 	
 	var _styleProperties2 = _interopRequireDefault(_styleProperties);
 	
-	var _templateMap = __webpack_require__(75);
+	var _templateMap = __webpack_require__(76);
 	
 	var _templateMap2 = _interopRequireDefault(_templateMap);
 	
-	var _stylePlaceholder = __webpack_require__(76);
+	var _stylePlaceholder = __webpack_require__(77);
 	
 	var _stylePlaceholder2 = _interopRequireDefault(_stylePlaceholder);
 	
-	var _styleInfo = __webpack_require__(74);
+	var _styleInfo = __webpack_require__(75);
 	
 	var _styleInfo2 = _interopRequireDefault(_styleInfo);
 	
-	var _styleCache = __webpack_require__(77);
+	var _styleCache = __webpack_require__(78);
 	
 	var _styleCache2 = _interopRequireDefault(_styleCache);
 	
-	var _applyShim = __webpack_require__(78);
+	var _applyShim = __webpack_require__(79);
 	
 	var _applyShim2 = _interopRequireDefault(_applyShim);
 	
-	var _documentWatcher = __webpack_require__(79);
+	var _documentWatcher = __webpack_require__(80);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -8849,7 +8930,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	window['ShadyCSS'] = new ShadyCSS();
 
 /***/ },
-/* 69 */
+/* 70 */
 /***/ function(module, exports) {
 
 	/**
@@ -9043,7 +9124,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var AT_START = '@';
 
 /***/ },
-/* 70 */
+/* 71 */
 /***/ function(module, exports) {
 
 	/**
@@ -9092,7 +9173,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 71 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -9113,11 +9194,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _styleUtil = __webpack_require__(72);
+	var _styleUtil = __webpack_require__(73);
 	
 	var StyleUtil = _interopRequireWildcard(_styleUtil);
 	
-	var _styleSettings = __webpack_require__(70);
+	var _styleSettings = __webpack_require__(71);
 	
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
@@ -9437,7 +9518,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = new StyleTransformer();
 
 /***/ },
-/* 72 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -9469,9 +9550,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.processVariableAndFallback = processVariableAndFallback;
 	exports.setElementClassRaw = setElementClassRaw;
 	
-	var _styleSettings = __webpack_require__(70);
+	var _styleSettings = __webpack_require__(71);
 	
-	var _cssParse = __webpack_require__(69);
+	var _cssParse = __webpack_require__(70);
 	
 	function toCssText(rules, callback) {
 	  if (typeof rules === 'string') {
@@ -9640,7 +9721,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 73 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -9661,19 +9742,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _cssParse = __webpack_require__(69);
+	var _cssParse = __webpack_require__(70);
 	
-	var _styleSettings = __webpack_require__(70);
+	var _styleSettings = __webpack_require__(71);
 	
-	var _styleTransformer = __webpack_require__(71);
+	var _styleTransformer = __webpack_require__(72);
 	
 	var _styleTransformer2 = _interopRequireDefault(_styleTransformer);
 	
-	var _styleUtil = __webpack_require__(72);
+	var _styleUtil = __webpack_require__(73);
 	
 	var StyleUtil = _interopRequireWildcard(_styleUtil);
 	
-	var _styleInfo = __webpack_require__(74);
+	var _styleInfo = __webpack_require__(75);
 	
 	var _styleInfo2 = _interopRequireDefault(_styleInfo);
 	
@@ -9830,36 +9911,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'valueForProperty',
 	    value: function valueForProperty(property, props) {
-	      var _this = this;
-	
 	      // case (1) default
 	      // case (3) defines a mixin and we have to reify the internals
 	      if (property) {
 	        if (property.indexOf(';') >= 0) {
 	          property = this.valueForProperties(property, props);
 	        } else {
-	          (function () {
-	            // case (2) variable
-	            var self = _this;
-	            var fn = function fn(prefix, value, fallback, suffix) {
-	              if (!value) {
-	                return prefix + suffix;
-	              }
-	              var propertyValue = self.valueForProperty(props[value], props);
-	              // if value is "initial", then the variable should be treated as unset
-	              if (!propertyValue || propertyValue === 'initial') {
-	                // fallback may be --a or var(--a) or literal
-	                propertyValue = self.valueForProperty(props[fallback] || fallback, props) || fallback;
-	              } else if (propertyValue === 'apply-shim-inherit') {
-	                // CSS build will replace `inherit` with `apply-shim-inherit`
-	                // for use with native css variables.
-	                // Since we have full control, we can use `inherit` directly.
-	                propertyValue = 'inherit';
-	              }
-	              return prefix + (propertyValue || '') + suffix;
-	            };
-	            property = StyleUtil.processVariableAndFallback(property, fn);
-	          })();
+	          // case (2) variable
+	          var self = this;
+	          var fn = function fn(prefix, value, fallback, suffix) {
+	            if (!value) {
+	              return prefix + suffix;
+	            }
+	            var propertyValue = self.valueForProperty(props[value], props);
+	            // if value is "initial", then the variable should be treated as unset
+	            if (!propertyValue || propertyValue === 'initial') {
+	              // fallback may be --a or var(--a) or literal
+	              propertyValue = self.valueForProperty(props[fallback] || fallback, props) || fallback;
+	            } else if (propertyValue === 'apply-shim-inherit') {
+	              // CSS build will replace `inherit` with `apply-shim-inherit`
+	              // for use with native css variables.
+	              // Since we have full control, we can use `inherit` directly.
+	              propertyValue = 'inherit';
+	            }
+	            return prefix + (propertyValue || '') + suffix;
+	          };
+	          property = StyleUtil.processVariableAndFallback(property, fn);
 	        }
 	      }
 	      return property && property.trim() || '';
@@ -10237,7 +10314,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = new StyleProperties();
 
 /***/ },
-/* 74 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -10258,7 +10335,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _templateMap = __webpack_require__(75);
+	var _templateMap = __webpack_require__(76);
 	
 	var _templateMap2 = _interopRequireDefault(_templateMap);
 	
@@ -10328,7 +10405,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = StyleInfo;
 
 /***/ },
-/* 75 */
+/* 76 */
 /***/ function(module, exports) {
 
 	/**
@@ -10349,7 +10426,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = {};
 
 /***/ },
-/* 76 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -10368,27 +10445,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _styleUtil = __webpack_require__(72);
+	var _styleUtil = __webpack_require__(73);
 	
-	var _styleSettings = __webpack_require__(70);
+	var _styleSettings = __webpack_require__(71);
 	
 	var placeholderMap = {};
 	
 	var ce = window.customElements;
 	if (ce && !_styleSettings.nativeShadow) {
-	  (function () {
-	    var origDefine = ce.define;
-	    ce.define = function (name, clazz, options) {
-	      placeholderMap[name] = (0, _styleUtil.applyStylePlaceHolder)(name);
-	      return origDefine.call(ce, name, clazz, options);
-	    };
-	  })();
+	  var origDefine = ce.define;
+	  ce.define = function (name, clazz, options) {
+	    placeholderMap[name] = (0, _styleUtil.applyStylePlaceHolder)(name);
+	    return origDefine.call(ce, name, clazz, options);
+	  };
 	}
 	
 	exports.default = placeholderMap;
 
 /***/ },
-/* 77 */
+/* 78 */
 /***/ function(module, exports) {
 
 	/**
@@ -10465,7 +10540,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = StyleCache;
 
 /***/ },
-/* 78 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -10547,13 +10622,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _styleUtil = __webpack_require__(72);
+	var _styleUtil = __webpack_require__(73);
 	
-	var _templateMap = __webpack_require__(75);
+	var _templateMap = __webpack_require__(76);
 	
 	var _templateMap2 = _interopRequireDefault(_templateMap);
 	
-	var _styleInfo = __webpack_require__(74);
+	var _styleInfo = __webpack_require__(75);
 	
 	var _styleInfo2 = _interopRequireDefault(_styleInfo);
 	
@@ -10869,7 +10944,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = applyShim;
 
 /***/ },
-/* 79 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -10889,9 +10964,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.flush = undefined;
 	
-	var _styleSettings = __webpack_require__(70);
+	var _styleSettings = __webpack_require__(71);
 	
-	var _styleTransformer = __webpack_require__(71);
+	var _styleTransformer = __webpack_require__(72);
 	
 	var _styleTransformer2 = _interopRequireDefault(_styleTransformer);
 	
@@ -10900,105 +10975,99 @@ return /******/ (function(modules) { // webpackBootstrap
 	var flush = exports.flush = function flush() {};
 	
 	if (!_styleSettings.nativeShadow) {
-	  (function () {
-	    var elementNeedsScoping = function elementNeedsScoping(element) {
-	      return element.classList && !element.classList.contains(_styleTransformer2.default.SCOPE_NAME) ||
-	      // note: necessary for IE11
-	      element instanceof SVGElement && (!element.hasAttribute('class') || element.getAttribute('class').indexOf(_styleTransformer2.default.SCOPE_NAME) < 0);
-	    };
+	  var elementNeedsScoping = function elementNeedsScoping(element) {
+	    return element.classList && !element.classList.contains(_styleTransformer2.default.SCOPE_NAME) ||
+	    // note: necessary for IE11
+	    element instanceof SVGElement && (!element.hasAttribute('class') || element.getAttribute('class').indexOf(_styleTransformer2.default.SCOPE_NAME) < 0);
+	  };
 	
-	    var handler = function handler(mxns) {
-	      for (var x = 0; x < mxns.length; x++) {
-	        var mxn = mxns[x];
-	        if (mxn.target === document.documentElement || mxn.target === document.head) {
-	          continue;
-	        }
-	        for (var i = 0; i < mxn.addedNodes.length; i++) {
-	          var n = mxn.addedNodes[i];
-	          if (elementNeedsScoping(n)) {
-	            var root = n.getRootNode();
-	            if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-	              // may no longer be in a shadowroot
-	              var host = root.host;
-	              if (host) {
-	                var scope = host.is || host.localName;
-	                _styleTransformer2.default.dom(n, scope);
-	              }
+	  var handler = function handler(mxns) {
+	    for (var x = 0; x < mxns.length; x++) {
+	      var mxn = mxns[x];
+	      if (mxn.target === document.documentElement || mxn.target === document.head) {
+	        continue;
+	      }
+	      for (var i = 0; i < mxn.addedNodes.length; i++) {
+	        var n = mxn.addedNodes[i];
+	        if (elementNeedsScoping(n)) {
+	          var root = n.getRootNode();
+	          if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+	            // may no longer be in a shadowroot
+	            var host = root.host;
+	            if (host) {
+	              var scope = host.is || host.localName;
+	              _styleTransformer2.default.dom(n, scope);
 	            }
 	          }
 	        }
-	        for (var _i = 0; _i < mxn.removedNodes.length; _i++) {
-	          var _n = mxn.removedNodes[_i];
-	          if (_n.nodeType === Node.ELEMENT_NODE) {
-	            var classes = undefined;
-	            if (_n.classList) {
-	              classes = Array.from(_n.classList);
-	            } else if (_n.hasAttribute('class')) {
-	              classes = _n.getAttribute('class').split(/\s+/);
-	            }
-	            if (classes !== undefined) {
-	              // NOTE: relies on the scoping class always being adjacent to the
-	              // SCOPE_NAME class.
-	              var classIdx = classes.indexOf(_styleTransformer2.default.SCOPE_NAME);
-	              if (classIdx >= 0) {
-	                var _scope = classes[classIdx + 1];
-	                if (_scope) {
-	                  _styleTransformer2.default.dom(_n, _scope, true);
-	                }
+	      }
+	      for (var _i = 0; _i < mxn.removedNodes.length; _i++) {
+	        var _n = mxn.removedNodes[_i];
+	        if (_n.nodeType === Node.ELEMENT_NODE) {
+	          var classes = undefined;
+	          if (_n.classList) {
+	            classes = Array.from(_n.classList);
+	          } else if (_n.hasAttribute('class')) {
+	            classes = _n.getAttribute('class').split(/\s+/);
+	          }
+	          if (classes !== undefined) {
+	            // NOTE: relies on the scoping class always being adjacent to the
+	            // SCOPE_NAME class.
+	            var classIdx = classes.indexOf(_styleTransformer2.default.SCOPE_NAME);
+	            if (classIdx >= 0) {
+	              var _scope = classes[classIdx + 1];
+	              if (_scope) {
+	                _styleTransformer2.default.dom(_n, _scope, true);
 	              }
 	            }
 	          }
 	        }
 	      }
-	    };
-	
-	    var observer = new MutationObserver(handler);
-	    var start = function start(node) {
-	      observer.observe(node, { childList: true, subtree: true });
-	    };
-	    var nativeCustomElements = window.customElements && !window.customElements.flush;
-	    // need to start immediately with native custom elements
-	    // TODO(dfreedm): with polyfilled HTMLImports and native custom elements
-	    // excessive mutations may be observed; this can be optimized via cooperation
-	    // with the HTMLImports polyfill.
-	    if (nativeCustomElements) {
-	      start(document);
-	    } else {
-	      (function () {
-	        var delayedStart = function delayedStart() {
-	          start(document.body);
-	        };
-	        // use polyfill timing if it's available
-	        if (window.HTMLImports) {
-	          window.HTMLImports.whenReady(delayedStart);
-	          // otherwise push beyond native imports being ready
-	          // which requires RAF + readystate interactive.
-	        } else {
-	          requestAnimationFrame(function () {
-	            if (document.readyState === 'loading') {
-	              (function () {
-	                var listener = function listener() {
-	                  delayedStart();
-	                  document.removeEventListener('readystatechange', listener);
-	                };
-	                document.addEventListener('readystatechange', listener);
-	              })();
-	            } else {
-	              delayedStart();
-	            }
-	          });
-	        }
-	      })();
 	    }
+	  };
 	
-	    exports.flush = flush = function flush() {
-	      handler(observer.takeRecords());
+	  var observer = new MutationObserver(handler);
+	  var start = function start(node) {
+	    observer.observe(node, { childList: true, subtree: true });
+	  };
+	  var nativeCustomElements = window.customElements && !window.customElements.flush;
+	  // need to start immediately with native custom elements
+	  // TODO(dfreedm): with polyfilled HTMLImports and native custom elements
+	  // excessive mutations may be observed; this can be optimized via cooperation
+	  // with the HTMLImports polyfill.
+	  if (nativeCustomElements) {
+	    start(document);
+	  } else {
+	    var delayedStart = function delayedStart() {
+	      start(document.body);
 	    };
-	  })();
+	    // use polyfill timing if it's available
+	    if (window.HTMLImports) {
+	      window.HTMLImports.whenReady(delayedStart);
+	      // otherwise push beyond native imports being ready
+	      // which requires RAF + readystate interactive.
+	    } else {
+	      requestAnimationFrame(function () {
+	        if (document.readyState === 'loading') {
+	          var listener = function listener() {
+	            delayedStart();
+	            document.removeEventListener('readystatechange', listener);
+	          };
+	          document.addEventListener('readystatechange', listener);
+	        } else {
+	          delayedStart();
+	        }
+	      });
+	    }
+	  }
+	
+	  exports.flush = flush = function flush() {
+	    handler(observer.takeRecords());
+	  };
 	}
 
 /***/ },
-/* 80 */
+/* 81 */
 /***/ function(module, exports) {
 
 	/**

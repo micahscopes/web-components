@@ -3,6 +3,7 @@
   "description": "",
   "jsnext:main": "src/index.js",
   "main": "dist/index.js",
+  "version": "0.0.0",
   "scripts": {
     "prepublish": "sk-bundle",
     "test": "sk-tests"
@@ -34,7 +35,7 @@
     "@webcomponents/shadycss": "https://github.com/webcomponents/shadycss/archive/bea402d.tar.gz",
     "@webcomponents/template": "https://github.com/webcomponents/template/archive/60d743e.tar.gz",
     "array.from": "^1.0.3",
-    "cloudydom": "skatejs/cloudydom#base",
+    "cloudydom": "micahscopes/cloudydom#base",
     "es6-promise": "^4.0.5",
     "object.assign": "^4.0.4"
   },

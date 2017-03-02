@@ -152,4 +152,5 @@ window.customElements && eval(`/**
 
   window.customElements.get = (tagname) => constructorByTagname.get(tagname);
 
-})();`);
+})();
+`);
